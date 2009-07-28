@@ -1,0 +1,10 @@
+include LICENSE MANIFEST.in README
+include *.py
+include run_all_tests.sh
+include mqas2*/*.py
+include mqas3*/*.py
+exclude dist/*
+exclude build/*
+exclude *.pyc
+exclude *.pyo
+exclude .hg/*

@@ -6,7 +6,7 @@ import unittest
 
 def show_usage(alert_version=False):
     print("""berryMQ tests
-  for Python 2.5, 2.6 (current interpreter: %d.%d.%d)
+  for Python 3.0, 3.1 (current interpreter: %d.%d.%d)
 
   run_tests.py [option] target:
 
@@ -21,11 +21,11 @@ def show_usage(alert_version=False):
     --2nd_node: network test(run this later)
 """ % sys.version_info[:3])
     if alert_version:
-        print("This test is able to be run on Python 2.X")
+        print("This test is able to be run on Python 3.X")
     sys.exit()
 
 def main():
-    if sys.version_info[0] != 2:
+    if sys.version_info[0] != 3:
         show_usage(alert_version=True)
 
     if len(sys.argv) == 1 or "--help" in sys.argv or "-h" in sys.argv:

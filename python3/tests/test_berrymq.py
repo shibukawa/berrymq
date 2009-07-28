@@ -140,8 +140,7 @@ class TestMessageSendAndReceive(unittest.TestCase):
         def sample_expose():
             call_history.append("expose")
 
-        class TestClass(object):
-            __metaclass__ = berrymq.Follower
+        class TestClass(metaclass = berrymq.Follower):
             @classmethod
             @berrymq.following("sample6:entry")
             def test_entry(cls, message):
@@ -156,17 +155,15 @@ class TestMessageSendAndReceive(unittest.TestCase):
         def sample_expose():
             call_history.append("expose")
 
-        class TestClass(object):
-            __metaclass__ = berrymq.Follower
+        class TestClass(metaclass = berrymq.Follower):
             @berrymq.following("sample7:entry")
             def test_entry(self, message):
                 call_history.append("entry")
-
         instance = TestClass()
         sample_expose()
         self.assertEqual(["entry", "expose"], call_history)
 
-    def test_guard_condition(self):
+    def test_guard_condition_test(self):
         call_history = []
         @berrymq.auto_twitter("sample8")
         def sample_expose(arg):

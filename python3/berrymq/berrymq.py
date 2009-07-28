@@ -1,18 +1,65 @@
 # -*- coding: utf-8 -*-
 
+"""Commitment oriented architecture framework implementations.
+
+This is my experimental idea.
+
+In Hollywood's raw, object B doesn't know when it called(System A).
+
+A -> B
+
+In This framework, it has different philosophy(System B).
+
+A ... I'm hungry
+  B ... Yes! Have a humbarger. Here you are!
+
+System A is allopoietic and system B is autopoietic(but it has no special
+features to generate copies). All objects in system B behave distributed
+autonomously. Its object knows boundary between itself and outer world.
+It knows what it can do and when it should work. In Hollywood's raw,
+It knows what it can do but it doesn't know when it should work.
+
+This implementation's API uses metaphor of twitter(but it does not follows
+people but message/event):
+
+  class A:
+    def do_something(self):
+      twitter("I'm hungry")
+
+  class B(__metaclass__=Follower):
+    @following("I'm hungry")
+    def give_hunberger(self, message):
+      print("Yes! Have a humbarger. Here you are!")
+
+Recent frameworks inject dependencies in setting up time. But all objects
+in this framework don't have dependencies at any time. In fact, you should use
+this mechanism between same level objects. I call it "society".
+Many systems (including real world) are hierarchical society.
+Any books says that 200 is the biggest members it can live in one group
+without any special rules and hierarchy.
+Between societies, you can use normal relationship(including Hallywoods raw).
+
+Have fun!
+
+This architecture inspired by Toradora!. It's Japanese nobel/cartoon.
+Characters in this pieces behave to give profit for others.
+They live strongly.
+This story is more impressed than Takeshi Kitano's films for me.
+
+"""
+
 import re
-import new
 import sys
-import copy
-import Queue as queue
+import queue
 import types
 import weakref
 import threading
-import xmlrpclib
+import xmlrpc.client
 import itertools
 import functools
 
-import berrymq_network as network
+from . import berrymq_network as network
+
 
 def _dummy(message):
     """Dummy guard condition function.
@@ -27,7 +74,7 @@ def _dummy(message):
     return True
 
 
-class Identifier(object):
+class Identifier:
     """Event naming identifier.
 
     identifier is built by string.
@@ -129,8 +176,8 @@ class cond(object):
         self.targets = [Identifier(identifier, guard_condition=guard_condition)]
 
     def __and__(self, rhs):
-        newtarget = copy.copy(self)
-        newtarget.targets += rhs.targets
+        newtarget = target(None, None)
+        newtarget.targets = self.targets + rhs.targets
         return newtarget
 
 
@@ -147,30 +194,25 @@ def _get_attributes(instance, typeobj):
             yield value
 
 
-class _weakmethod_ref(object):
-    """This method wrapper comes from Python Cookbook 2nd 6.10"""
-    __slots__ = ("_obj", "_func", "_clas")
+class _weakmethod_ref:
+    """This method is arange version of Python Cookbook 2nd 6.10"""
+    __slots__ = ("_obj", "_func")
     def __init__(self, fn):
         try:
-            o, f, c = fn.im_self, fn.im_func, fn.im_class
+            o, f = fn.__self__, fn.__func__
         except AttributeError:
             self._obj = None
             self._func = fn
-            self._clas = None
         else:
-            if o is None:
-                self._obj = None
-            else:
-                self._obj = weakref.ref(o)
+            self._obj = weakref.ref(o)
             self._func = f
-            self._clas = c
 
     def __call__(self):
         if self._obj is None:
             return self._func
         elif self._obj() is None:
             return None
-        return new.instancemethod(self._func, self._obj(), self._clas)
+        return types.MethodType(self._func, self._obj())
 
 
 class _weakfunction_ref(object):
@@ -188,7 +230,7 @@ class _weakfunction_ref(object):
 class InvalidExpositionName(Exception): pass
 
 
-class MessageQueue(object):
+class MessageQueueAsStructure:
     _followers = {}
     _expositions = set()
 
@@ -201,6 +243,15 @@ class MessageQueue(object):
                 function = function_wrapper()
                 if function is not None:
                     yield id_obj, function
+
+    def get_valid_expositions(self):
+        for id_obj, function_wrapper in self._expositions:
+            function = function_wrapper()
+            if function is not None:
+                yield id_obj, function
+
+    def regist_exposition(self, id_obj, function):
+        self._expositions.add((id_obj, function))
 
     def regist_follower(self, id_obj, function):
         followers = self._followers.setdefault(id_obj.name, [])
@@ -226,27 +277,6 @@ class MessageQueue(object):
                 function()(message)
             else:
                 ThreadPool.request_work(function(), message)
-
-
-class MessageQueueRoot(object):
-    _default_namespace = None
-    _namespaces = {}
-
-    @classmethod
-    def twitter(cls, id_obj, args, kwargs):
-        pass
-
-    @classmethod
-    def __getitem__(cls, namespace):
-        pass
-
-    @classmethod
-    def regist_follower(cls, target_obj, decorator):
-        pass
-
-    @classmethod
-    def show_followers(cls):
-        pass
 
 
 class ThreadPool(object):
@@ -348,6 +378,11 @@ class OpenMethodAttribute(object):
         attribute.followers.append(id_obj)
 
     @classmethod
+    def add_exposition(cls, id_obj, function):
+        attribute = cls._set_open_method_attribute(function)
+        attribute.expositions.append(id_obj)
+
+    @classmethod
     def _set_open_method_attribute(cls, function):
         attribute = getattr(function, cls.attribute_name, None)
         if attribute is None:
@@ -365,11 +400,6 @@ def following_function(identifier, guard_condition=_dummy):
 
 
 def following(identifier, guard_condition=_dummy):
-    """This decorator is used for lazy instance method registration.
-
-    @sa Follower
-    @sa following
-    """
     id_obj = Identifier(identifier, guard_condition=guard_condition)
     def _(f):
         OpenMethodAttribute.add_follower(id_obj, f)
@@ -412,8 +442,7 @@ class Follower(type):
 
     use like this:
 
-      class Logger(object):
-          __metaclass__=Follower
+      class Logger(metaclass=Follower):
           @following_method("function", "call")
           def log_function_call(self, message):
               ...
@@ -435,10 +464,11 @@ class Follower(type):
             attribute = getattr(method, OpenMethodAttribute.attribute_name, None)
             if attribute is None:
                 continue
-            if method.im_self is None:
-                continue
             for id_obj in attribute.followers:
                 _berrymq.regist_follower(id_obj, _weakmethod_ref(method))
+            for id_obj in attribute.expositions:
+                _berrymq.regist_exposition(id_obj, _weakmethod_ref(method))
+
             attribute.is_init = True
         return newtype
 
@@ -453,6 +483,8 @@ class Follower(type):
                 continue
             for id_obj in attribute.followers:
                 _berrymq.regist_follower(id_obj, _weakmethod_ref(method))
+            for id_obj in attribute.expositions:
+                _berrymq.regist_exposition(id_obj, _weakmethod_ref(method))
         return instance
 
 
@@ -496,7 +528,7 @@ class Message(object):
               print("my score:", score)
               twitter("result", "show", username="shibu", score=score) # get 2 kwparams
 
-          Def log(username, score): # same params with exposition point.
+          def log(username, score): # same params with exposition point.
               ...
 
           @following("result", "show")
@@ -507,7 +539,7 @@ class Message(object):
         return func(**self.kwargs)
 
 
-_berrymq = MessageQueue()
+_berrymq = MessageQueueAsStructure()
 
 
 def set_multiplicity(number):
@@ -515,6 +547,14 @@ def set_multiplicity(number):
         ThreadPool.make_thread_pool(number)
     else:
         ThreadPool.clear_thread_pool()
+
+
+def show_expositions():
+    methods = []
+    for id_obj, function_wrapper in _berrymq.get_valid_expositions():
+        for action in id_obj.action:
+            methods.append("%s:%s" % (id_obj.name, action))
+    return sorted(set(methods))
 
 
 def show_followers():
@@ -591,12 +631,12 @@ class MessageQueueReceiver(object):
         self.my_url = url
 
     def _add_connection(self, url):
-        proxy = xmlrpclib.ServerProxy(url)
+        proxy = xmlrpc.client.ServerProxy(url)
         self.servers[url] = proxy
         proxy.connect(self.my_url)
 
     def connect(self, url):
-        self.servers[url] = xmlrpclib.ServerProxy(url)
+        self.servers[url] = xmlrpc.client.ServerProxy(url)
         return True
 
     def quit(self):
@@ -605,12 +645,11 @@ class MessageQueueReceiver(object):
         return True
 
     def send_twitter(self, id, args, kwargs):
-        from .berrymq import _berrymq
-        print "twitter from other: %s args=%s, kwargs=%s" % (id, args, kwargs)
+        print("twitter from other: %s args=%s, kwargs=%s" % (id, args, kwargs))
         _berrymq.twitter_local(Identifier(id), args, kwargs)
         return True
 
     def _twitter_to_other_process(self, id_obj, args, kwargs):
-        for server in self.servers.itervalues():
+        for server in self.servers.values():
             server.send_twitter(id_obj.id_str(), args, kwargs)
         return True

@@ -35,7 +35,7 @@ module BerryMQ
         @functions[0] = method :_match_always
       elsif name == "*" && action != "*"
         @name = nil
-        @action = Set.new [$2]
+        @action = Set.new [action]
         @functions[0] = method :_match_action_only
       elsif name != "*" && action == "*"
         @name = name
@@ -43,7 +43,7 @@ module BerryMQ
         @functions[0] = method :_match_name_only
       elsif name != "*" && action != "*"
         @name = name
-        @action = Set.new [$2]
+        @action = Set.new [action]
         @functions[0] = method :_match_all
       end
       @functions[1] = method :_match_always
@@ -85,6 +85,7 @@ module BerryMQ
     end
 
     def _match_name_only(rhs)
+      return true if self.name == nil or self.name == nil
       self.name == rhs.name
     end
 
@@ -94,9 +95,11 @@ module BerryMQ
 
     def _match_action_only(rhs)
       if self.action == nil
-        rhs.action != nil
+        return !rhs.action.empty? if rhs.action != nil
+        return true
       elsif rhs.action == nil
-        self.action != nil
+        return !self.action.empty? if self.action  != nil
+        return true
       else
         !(self.action && rhs.action).empty?
       end
