@@ -24,7 +24,8 @@ module BerryMQ
     def initialize(key_or_identifier, action=nil)
       @functions = [nil, nil]
       if action != nil
-        @name = key_or_identifier
+        @name = key_or_identifier.name
+        @namespace = key_or_identifier.namespace
         @action = Set.new [action]
         @functions[0] = method :_match_all
         return

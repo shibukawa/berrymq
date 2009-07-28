@@ -30,7 +30,7 @@ module BerryMQ
       self.get_decorators(target_obj.class).each {|decorator|
         next if decorator == nil
         if decorator.key == :following
-          BerryMQ::MessageQueueRoot::regist_follower(target_obj, decorator)
+          BerryMQ::RootTransporter::regist_follower(target_obj, decorator)
         end
       }      
     end

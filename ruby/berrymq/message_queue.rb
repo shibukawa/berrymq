@@ -1,7 +1,7 @@
 require 'set'
 
 module BerryMQ
-  class MessageQueue
+  class Transporter
     attr_reader :followers
     def initialize
       @followers = Hash.new {|hash, key| hash[key] = []}
@@ -53,15 +53,15 @@ module BerryMQ
       @id_obj.id_str()
     end
     def twitter(id_obj, args, kwargs)
-      MessageQueueRoot.twitter(id_obj, args, kwargs)
+      RootTransporter.twitter(id_obj, args, kwargs)
     end
     def apply(func)
     end
   end
 
-  module MessageQueueRoot
+  module RootTransporter
     @@default_namespace = nil
-    @@namespaces = Hash.new {|hash, key| hash[key] = MessageQueue.new}
+    @@namespaces = Hash.new {|hash, key| hash[key] = Transporter.new}
     def self.twitter(id_obj, args, kwargs)
       namespace = id_obj.namespace
       namespace = @@default_namespace if namespace == nil

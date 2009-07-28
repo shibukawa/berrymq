@@ -45,10 +45,10 @@ module BerryMQ
     else
       kwargs = {}
     end
-    BerryMQ::MessageQueueRoot::twitter(id_obj, args, kwargs)
+    BerryMQ::RootTransporter::twitter(id_obj, args, kwargs)
   end
 
   def self.show_followers
-    BerryMQ::MessageQueueRoot::show_followers
+    BerryMQ::RootTransporter::show_followers
   end
 end

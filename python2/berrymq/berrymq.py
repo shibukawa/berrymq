@@ -46,6 +46,7 @@ class Identifier(object):
         self.functions = [None, None]
         if action is not None:
             self.name = key_or_identifier.name
+            self.namespace = key_or_identifier.namespace
             self.action = set([action])
             self.functions[0] = self._match_all
             return
@@ -188,22 +189,19 @@ class _weakfunction_ref(object):
 class InvalidExpositionName(Exception): pass
 
 
-class MessageQueue(object):
-    _followers = {}
-    _expositions = set()
-
+class Transporter(object):
     def __init__(self):
-        pass
+        self.followers = {}
 
     def get_valid_followers(self):
-        for name, followers in self._followers.items():
+        for name, followers in self.followers.items():
             for id_obj, function_wrapper in followers:
                 function = function_wrapper()
                 if function is not None:
                     yield id_obj, function
 
     def regist_follower(self, id_obj, function):
-        followers = self._followers.setdefault(id_obj.name, [])
+        followers = self.followers.setdefault(id_obj.name, [])
         followers.append((id_obj, function))
 
     def twitter(self, id_obj, args, kwargs, counter=100):
@@ -214,8 +212,8 @@ class MessageQueue(object):
 
     def twitter_local(self, id_obj, args, kwargs, counter=100):
         message = Message(id_obj, args, kwargs, counter)
-        wildcard_actions = self._followers.get(None, [])
-        certaion_actions = self._followers.get(id_obj.name, [])
+        wildcard_actions = self.followers.get(None, [])
+        certaion_actions = self.followers.get(id_obj.name, [])
         for follower in itertools.chain(certaion_actions, wildcard_actions):
             following_id, function = follower
             if not following_id.is_match(id_obj, message):
@@ -228,25 +226,35 @@ class MessageQueue(object):
                 ThreadPool.request_work(function(), message)
 
 
-class MessageQueueRoot(object):
+class RootTransporter(object):
     _default_namespace = None
     _namespaces = {}
 
     @classmethod
     def twitter(cls, id_obj, args, kwargs):
-        pass
+        namespace = id_obj.namespace
+        if namespace is None:
+            namespace = cls._default_namespace
+        cls.get(namespace).twitter(id_obj, args, kwargs)
 
     @classmethod
-    def __getitem__(cls, namespace):
-        pass
-
-    @classmethod
-    def regist_follower(cls, target_obj, decorator):
-        pass
+    def regist_follower(cls, id_obj, method):
+        namespace = id_obj.namespace
+        if namespace is None:
+            namespace = cls._default_namespace
+        cls.get(namespace).regist_follower(id_obj, method)
 
     @classmethod
     def show_followers(cls):
         pass
+
+    @classmethod
+    def get(cls, namespace):
+        message_queue = cls._namespaces.get(namespace)
+        if message_queue is None:
+            message_queue = Transporter()
+            cls._namespaces[namespace] = message_queue
+        return message_queue
 
 
 class ThreadPool(object):
@@ -326,7 +334,7 @@ class ThreadPool(object):
         del cls._pool[:]
 
 
-class OpenMethodAttribute(object):
+class MethodDecorator(object):
     """This class is attached to exposition/following functions/methods.
 
     After initialization, this shows any information to draw connections.
@@ -359,7 +367,7 @@ class OpenMethodAttribute(object):
 def following_function(identifier, guard_condition=_dummy):
     id_obj = Identifier(identifier, guard_condition=guard_condition)
     def _(f):
-        _berrymq.regist_follower(id_obj, _weakfunction_ref(f))
+        RootTransporter.regist_follower(id_obj, _weakfunction_ref(f))
         return f
     return _
 
@@ -372,7 +380,7 @@ def following(identifier, guard_condition=_dummy):
     """
     id_obj = Identifier(identifier, guard_condition=guard_condition)
     def _(f):
-        OpenMethodAttribute.add_follower(id_obj, f)
+        MethodDecorator.add_follower(id_obj, f)
         return f
     return _
 
@@ -385,22 +393,22 @@ def auto_twitter(identifier, entry=False, exit=False):
             exit_id = Identifier(id_obj, "exit")
             @functools.wraps(func)
             def __(*args, **kwargs):
-                _berrymq.twitter(entry_id, args, kwargs)
+                RootTransporter.twitter(entry_id, args, kwargs)
                 func(*args, **kwargs)
-                _berrymq.twitter(exit_id, args, kwargs)
+                RootTransporter.twitter(exit_id, args, kwargs)
             return __
         elif exit or id_obj.action is not None and "exit" in id_obj.action:
             id_obj.action = set(["exit"])
             @functools.wraps(func)
             def __(*args, **kwargs):
                 func(*args, **kwargs)
-                _berrymq.twitter(id_obj, args, kwargs)
+                RootTransporter.twitter(id_obj, args, kwargs)
             return __
         elif entry or id_obj.action is not None and "entry" in id_obj.action:
             id_obj.action = set(["entry"])
             @functools.wraps(func)
             def __(*args, **kwargs):
-                _berrymq.twitter(id_obj, args, kwargs)
+                RootTransporter.twitter(id_obj, args, kwargs)
                 func(*args, **kwargs)
             return __
         return func
@@ -432,13 +440,13 @@ class Follower(type):
         """Create exposition point for classmethod."""
         newtype = type.__new__(cls, name, bases, dict)
         for method in _get_attributes(newtype, types.MethodType):
-            attribute = getattr(method, OpenMethodAttribute.attribute_name, None)
+            attribute = getattr(method, MethodDecorator.attribute_name, None)
             if attribute is None:
                 continue
             if method.im_self is None:
                 continue
             for id_obj in attribute.followers:
-                _berrymq.regist_follower(id_obj, _weakmethod_ref(method))
+                RootTransporter.regist_follower(id_obj, _weakmethod_ref(method))
             attribute.is_init = True
         return newtype
 
@@ -446,13 +454,13 @@ class Follower(type):
         """Create exposition point for instancemethod."""
         instance = type.__call__(cls, *args)
         for method in _get_attributes(instance, types.MethodType):
-            attribute = getattr(method, OpenMethodAttribute.attribute_name, None)
+            attribute = getattr(method, MethodDecorator.attribute_name, None)
             if attribute is None:
                 continue
             if attribute.is_init:
                 continue
             for id_obj in attribute.followers:
-                _berrymq.regist_follower(id_obj, _weakmethod_ref(method))
+                RootTransporter.regist_follower(id_obj, _weakmethod_ref(method))
         return instance
 
 
@@ -485,7 +493,7 @@ class Message(object):
         return self._id_obj.id_str()
 
     def twitter(self, id_obj, **kwargs):
-        _berrymq.twitter(id_obj, kwargs, self._counter-1)
+        RootTransporter.twitter(id_obj, kwargs, self._counter-1)
 
     def apply(self, func):
         """Utility method to enease method call deligation.
@@ -494,7 +502,8 @@ class Message(object):
           @exposition("result", "show")
           def show_result(score):
               print("my score:", score)
-              twitter("result", "show", username="shibu", score=score) # get 2 kwparams
+              # get 2 kwparams
+              twitter("result", "show", username="shibu", score=score) 
 
           Def log(username, score): # same params with exposition point.
               ...
@@ -507,9 +516,6 @@ class Message(object):
         return func(**self.kwargs)
 
 
-_berrymq = MessageQueue()
-
-
 def set_multiplicity(number):
     if number != 0:
         ThreadPool.make_thread_pool(number)
@@ -519,7 +525,7 @@ def set_multiplicity(number):
 
 def show_followers():
     methods = []
-    for id_obj, function_wrapper in _berrymq.get_valid_followers():
+    for id_obj, function_wrapper in RootTransporter.get_valid_followers():
         for action in id_obj.action:
             methods.append("%s:%s" % (id_obj.name, action))
     return sorted(set(methods))
@@ -535,7 +541,7 @@ def show_network():
                          "pencolor":"#358ACC"},
                 "joint":{"shape":"none"}}
 
-    for name, action, method in _berrymq.get_valid_expositions():
+    for name, action, method in RootTransporter.get_valid_expositions():
         key = (name, action)
         net = network.setdefault(key, {"follower":[], "exposition":[]})
         if isinstance(method, types.MethodType):
@@ -544,7 +550,7 @@ def show_network():
         else:
             net["exposition"].append(None)
 
-    for name, action, method in _berrymq.get_valid_followers():
+    for name, action, method in RootTransporter.get_valid_followers():
         key = (name, action)
         net = network.setdefault(key, {"follower":[], "exposition":[]})
         if isinstance(method, types.MethodType):
@@ -582,10 +588,10 @@ def show_network():
 
 
 def twitter(identifier, *args, **kwargs):
-    _berrymq.twitter(Identifier(identifier), args, kwargs)
+    RootTransporter.twitter(Identifier(identifier), args, kwargs)
 
 
-class MessageQueueReceiver(object):
+class TransporterReceiver(object):
     def __init__(self, url):
         self.servers = {}
         self.my_url = url
@@ -605,9 +611,9 @@ class MessageQueueReceiver(object):
         return True
 
     def send_twitter(self, id, args, kwargs):
-        from .berrymq import _berrymq
+        from .berrymq import RootTransporter
         print "twitter from other: %s args=%s, kwargs=%s" % (id, args, kwargs)
-        _berrymq.twitter_local(Identifier(id), args, kwargs)
+        RootTransporter.twitter_local(Identifier(id), args, kwargs)
         return True
 
     def _twitter_to_other_process(self, id_obj, args, kwargs):

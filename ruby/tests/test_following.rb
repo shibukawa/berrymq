@@ -11,7 +11,7 @@ end
 class TestFollowerRegister < Test::Unit::TestCase
   def test_regist
     sample = Sample1.new
-    assert_equal(1, BerryMQ::MessageQueueRoot["test_ns1"].size)
+    assert_equal(1, BerryMQ::RootTransporter["test_ns1"].size)
   end
 end
 
