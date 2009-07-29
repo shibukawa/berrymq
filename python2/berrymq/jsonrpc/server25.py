@@ -44,7 +44,6 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
         self.__is_shut_down = threading.Event()
 
     def serve_forever(self, in_thread=False):
-        print self.allow_reuse_address
         def serve_thread(server):
             server.serve_forever()
         if in_thread:
