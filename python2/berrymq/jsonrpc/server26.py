@@ -6,10 +6,6 @@ import threading
 import SocketServer
 from server_common import (SimpleJSONRPCDispatcher,
                            SimpleJSONRPCRequestHandler)
-try:
-    import fcntl
-except ImportError:
-    fcntl = None
 
 
 class SimpleJSONRPCServer(SocketServer.TCPServer,
@@ -32,29 +28,20 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
         SimpleJSONRPCDispatcher.__init__(self, allow_none=True, encoding=None)
         SocketServer.TCPServer.__init__(self, addr, requestHandler)
 
-        # [Bug #1222790] If possible, set close-on-exec flag; if a
-        # method spawns a subprocess, the subprocess shouldn't have
-        # the listening socket open.
-        if fcntl is not None and hasattr(fcntl, 'FD_CLOEXEC'):
-            flags = fcntl.fcntl(self.fileno(), fcntl.F_GETFD)
-            flags |= fcntl.FD_CLOEXEC
-            fcntl.fcntl(self.fileno(), fcntl.F_SETFD, flags)
-
-        self.__serving = False  
         self.__thread = None  
-        self.__is_shut_down = threading.Event()
 
-    def serve_forever(self, in_thread=False):
-        def serve_thread(server):
-            server.serve_forever()
+    def serve_forever(self, in_thread=False, poll_interval=0.5):
+        def serve_thread(server, poll_interval):
+            server.serve_forever(poll_interval=poll_interval)
         if in_thread:
-            self.__thread = threading.Thread(target=serve_thread, args=[self])
+            args = [self, poll_interval]
+            self.__thread = threading.Thread(target=serve_thread, args=args)
             self.__thread.start()
         else:
-            self.__serving = True
-            self.__is_shut_down.clear()
-            while self.__serving:
-                self.handle_request()
-            self.__is_shut_down.set()
+            SocketServer.TCPServer.serve_forever(self, poll_interval)
 
-
+    def shutdown(self):
+        SocketServer.TCPServer.shutdown(self)
+        if self.__thread:
+            self.__thread.join()
+            self.__thread = None

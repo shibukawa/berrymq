@@ -6,10 +6,6 @@ import threading
 import SocketServer
 from server_common import (SimpleJSONRPCDispatcher,
                            SimpleJSONRPCRequestHandler)
-try:
-    import fcntl
-except ImportError:
-    fcntl = None
 
 
 class SimpleJSONRPCServer(SocketServer.TCPServer,
@@ -30,14 +26,6 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
 
         SimpleJSONRPCDispatcher.__init__(self, allow_none=True, encoding=None)
         SocketServer.TCPServer.__init__(self, addr, requestHandler)
-
-        # [Bug #1222790] If possible, set close-on-exec flag; if a
-        # method spawns a subprocess, the subprocess shouldn't have
-        # the listening socket open.
-        #if fcntl is not None and hasattr(fcntl, 'FD_CLOEXEC'):
-        #    flags = fcntl.fcntl(self.fileno(), fcntl.F_GETFD)
-        #    flags |= fcntl.FD_CLOEXEC
-        #    fcntl.fcntl(self.fileno(), fcntl.F_SETFD, flags)
 
         self.__serving = False  
         self.__thread = None  
@@ -68,8 +56,6 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
         return request is not None
 
     def shutdown(self):
-        if not self.__serving:
-            return
         self.__serving = False
         self.__is_shut_down.wait()
         if self.__thread:
