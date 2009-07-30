@@ -17,6 +17,7 @@ def show_usage(alert_version=False):
     --all:      run all test
     --basic:    test basic features only
     --parallel: test multithreading feature only(slow)
+    --jsonrpc:  test jsonrpc components(slow)
     --1st_node: network test(run this first)
     --2nd_node: network test(run this later)
 """ % sys.version_info[:3])
@@ -56,6 +57,10 @@ def main():
     if "--parallel" in sys.argv or "--all" in sys.argv:
         import tests.test_berrymq_parallel
         suite.addTest(tests.test_berrymq_parallel.test_setup(berrymq))
+
+    if "--jsonrpc" in sys.argv or "--all" in sys.argv:
+        import tests.test_jsonrpc
+        suite.addTest(tests.test_jsonrpc.test_setup())
 
     if suite.countTestCases():
         runner = unittest.TextTestRunner()
