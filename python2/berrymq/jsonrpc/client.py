@@ -35,9 +35,7 @@ def _get_response(file, sock):
         if not response:
             break
         data += response
-
     file.close()
-
     return data
 
 
@@ -65,10 +63,16 @@ class ServerProxy:
             self.__handler = "/JSON"
 
         if transport is None:
-            if type == "https":
-                transport = SafeTransport(use_datetime=use_datetime)
+            if sys.version_info[:2] == (2, 4):
+                if type == "https":
+                    transport = SafeTransport()
+                else:
+                    transport = Transport()
             else:
-                transport = Transport(use_datetime=use_datetime)
+                if type == "https":
+                    transport = SafeTransport(use_datetime=use_datetime)
+                else:
+                    transport = Transport(use_datetime=use_datetime)
 
         self.__transport = transport
         self.__id        = id

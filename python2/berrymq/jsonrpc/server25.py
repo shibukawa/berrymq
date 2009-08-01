@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import simplejson as json
 import select 
 import threading
@@ -23,8 +24,11 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
     def __init__(self, addr, requestHandler=SimpleJSONRPCRequestHandler,
                  logRequests=True):
         self.logRequests = logRequests
-
-        SimpleJSONRPCDispatcher.__init__(self, allow_none=True, encoding=None)
+        if sys.version_info[:2] == (2, 4):
+            SimpleJSONRPCDispatcher.__init__(self)
+        else:
+            SimpleJSONRPCDispatcher.__init__(self, allow_none=True, 
+                                             encoding=None)
         SocketServer.TCPServer.__init__(self, addr, requestHandler)
 
         self.__serving = False  

@@ -7,7 +7,7 @@ import berrymq.berrymq as berrymq
 
 def show_usage(alert_version=False):
     print("""berryMQ tests
-  for Python 2.5, 2.6 (current interpreter: %d.%d.%d)
+  for Python 2.4, 2.5, 2.6 (current interpreter: %d.%d.%d)
 
   run_tests.py [option] target:
 

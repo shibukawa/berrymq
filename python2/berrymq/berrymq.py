@@ -10,7 +10,10 @@ import weakref
 import threading
 import xmlrpclib
 import itertools
-import functools
+try:
+    import functools
+except ImportError:
+    functools = None
 
 import berrymq_network as network
 
@@ -89,8 +92,14 @@ class Identifier(object):
             id(self), self.id_str())
 
     def id_str(self):
-        name = "*" if self.name is None else self.name
-        action = "*" if self.action is None else ",".join(sorted(self.action))
+        name = self.name
+        if name is None:
+            name = "*"
+        action = self.action
+        if self.action is None:
+            action = "*"
+        else:
+            action = ",".join(sorted(self.action))
         return "%s:%s" % (name, action)
 
     @classmethod
@@ -385,26 +394,29 @@ def auto_twitter(identifier, entry=False, exit=False):
         if entry == exit:
             entry_id = Identifier(id_obj, "entry")
             exit_id = Identifier(id_obj, "exit")
-            @functools.wraps(func)
-            def __(*args, **kwargs):
+            def inner(*args, **kwargs):
                 RootTransporter.twitter(entry_id, args, kwargs)
                 func(*args, **kwargs)
                 RootTransporter.twitter(exit_id, args, kwargs)
-            return __
+            if functools:
+                return functools.wraps(func)(inner)
+            return inner
         elif exit or id_obj.action is not None and "exit" in id_obj.action:
             id_obj.action = set(["exit"])
-            @functools.wraps(func)
-            def __(*args, **kwargs):
+            def inner(*args, **kwargs):
                 func(*args, **kwargs)
                 RootTransporter.twitter(id_obj, args, kwargs)
-            return __
+            if functools:
+                return functools.wraps(func)(inner)
+            return inner
         elif entry or id_obj.action is not None and "entry" in id_obj.action:
             id_obj.action = set(["entry"])
-            @functools.wraps(func)
-            def __(*args, **kwargs):
+            def inner(*args, **kwargs):
                 RootTransporter.twitter(id_obj, args, kwargs)
                 func(*args, **kwargs)
-            return __
+            if functools:
+                return functools.wraps(func)(inner)
+            return inner
         return func
     return _
 
@@ -605,7 +617,6 @@ class TransporterReceiver(object):
         return True
 
     def send_twitter(self, id, args, kwargs):
-        from .berrymq import RootTransporter
         print "twitter from other: %s args=%s, kwargs=%s" % (id, args, kwargs)
         RootTransporter.twitter_local(Identifier(id), args, kwargs)
         return True
