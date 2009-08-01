@@ -2,6 +2,7 @@
 
 import sys
 import unittest
+import berrymq.berrymq as berrymq
 
 
 def show_usage(alert_version=False):
@@ -9,9 +10,6 @@ def show_usage(alert_version=False):
   for Python 2.5, 2.6 (current interpreter: %d.%d.%d)
 
   run_tests.py [option] target:
-
-  *option
-    --single-thread
 
   *target
     --all:      run all test
@@ -25,6 +23,7 @@ def show_usage(alert_version=False):
         print("This test is able to be run on Python 2.X")
     sys.exit()
 
+
 def main():
     if sys.version_info[0] != 2:
         show_usage(alert_version=True)
@@ -33,22 +32,15 @@ def main():
         show_usage()
 
     if "--1st_node" in sys.argv:
-        import berrymq
         import tests.test_berrymq_network_1st_node
         tests.test_berrymq_network_1st_node.test(mqas)
         sys.exit()
     if "--2nd_node" in sys.argv:
-        import berrymq
         import tests.test_berrymq_network_2nd_node
         tests.test_berrymq_network_2nd_node.test(berrymq)
         sys.exit()
 
     suite = unittest.TestSuite()
-
-    if "--single-thread" in sys.argv:
-        import berrymq_singlethread.berrymq as berrymq
-    else:
-        import berrymq.berrymq as berrymq
 
     if "--basic" in sys.argv or "--all" in sys.argv:
         import tests.test_berrymq
@@ -71,5 +63,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

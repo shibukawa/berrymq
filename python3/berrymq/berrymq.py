@@ -57,7 +57,6 @@ import threading
 import xmlrpc.client
 import itertools
 import functools
-
 from . import berrymq_network as network
 
 
@@ -228,15 +227,8 @@ class _weakfunction_ref(object):
         return self._func()
 
 
-class InvalidExpositionName(Exception): pass
-
-
 class Transporter:
     _followers = {}
-    _expositions = set()
-
-    def __init__(self):
-        pass
 
     def get_valid_followers(self):
         for name, followers in self._followers.items():
@@ -244,15 +236,6 @@ class Transporter:
                 function = function_wrapper()
                 if function is not None:
                     yield id_obj, function
-
-    def get_valid_expositions(self):
-        for id_obj, function_wrapper in self._expositions:
-            function = function_wrapper()
-            if function is not None:
-                yield id_obj, function
-
-    def regist_exposition(self, id_obj, function):
-        self._expositions.add((id_obj, function))
 
     def regist_follower(self, id_obj, function):
         followers = self._followers.setdefault(id_obj.name, [])
@@ -262,7 +245,6 @@ class Transporter:
         self.twitter_local(id_obj, args, kwargs, counter)
         #if p2p._receiver:
         #    p2p._receiver._twitter_to_other_process(id_obj, args, kwargs)
-
 
     def twitter_local(self, id_obj, args, kwargs, counter=100):
         message = Message(id_obj, args, kwargs, counter)
@@ -498,9 +480,6 @@ class Follower(type):
                 continue
             for id_obj in attribute.followers:
                 RootTransporter.regist_follower(id_obj, _weakmethod_ref(method))
-            for id_obj in attribute.expositions:
-                RootTransporter.regist_exposition(id_obj, _weakmethod_ref(method))
-
             attribute.is_init = True
         return newtype
 
@@ -515,9 +494,6 @@ class Follower(type):
                 continue
             for id_obj in attribute.followers:
                 RootTransporter.regist_follower(id_obj, _weakmethod_ref(method))
-            for id_obj in attribute.expositions:
-                RootTransporter.regist_exposition(id_obj, 
-                                                  _weakmethod_ref(method))
         return instance
 
 
@@ -578,14 +554,6 @@ def set_multiplicity(number):
         ThreadPool.make_thread_pool(number)
     else:
         ThreadPool.clear_thread_pool()
-
-
-def show_expositions():
-    methods = []
-    for id_obj, function_wrapper in RootTransporter.get_valid_expositions():
-        for action in id_obj.action:
-            methods.append("%s:%s" % (id_obj.name, action))
-    return sorted(set(methods))
 
 
 def show_followers():

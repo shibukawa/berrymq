@@ -11,7 +11,7 @@ def show_usage(alert_version=False):
   run_tests.py [option] target:
 
   *option
-    --single-thread
+    --single-thread:  simple version(good for code reading)
 
   *target
     --all:      run all test
