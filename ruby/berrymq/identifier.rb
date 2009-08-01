@@ -72,7 +72,7 @@ module BerryMQ
     end
 
     def to_s
-      "<mqas.Identifier object at %d: id=%s>" % [self.object_id, id_str()]
+      "<BerryMQ::Identifier object at %d: id=%s>" % [self.object_id, id_str()]
     end
 
     def id_str
@@ -86,7 +86,7 @@ module BerryMQ
     end
 
     def _match_name_only(rhs)
-      return true if self.name == nil or self.name == nil
+      return true if self.name == nil or rhs.name == nil
       self.name == rhs.name
     end
 
@@ -95,15 +95,8 @@ module BerryMQ
     end
 
     def _match_action_only(rhs)
-      if self.action == nil
-        return !rhs.action.empty? if rhs.action != nil
-        return true
-      elsif rhs.action == nil
-        return !self.action.empty? if self.action  != nil
-        return true
-      else
-        !(self.action && rhs.action).empty?
-      end
+      return true if rhs.action == nil
+      !(self.action & rhs.action).empty?
     end
 
     def is_match(expose_identifier, message=nil)

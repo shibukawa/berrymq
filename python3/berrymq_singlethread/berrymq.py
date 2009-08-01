@@ -136,31 +136,24 @@ class Identifier:
         action = "*" if self.action is None else ",".join(sorted(self.action))
         return "%s:%s" % (name, action)
 
-    @classmethod
-    def _match_all(cls, lhs, rhs):
-        return cls._match_name_only(lhs, rhs) \
-            and cls._match_action_only(lhs, rhs)
+    def _match_all(self, rhs):
+        return self._match_name_only(rhs) and self._match_action_only(rhs)
 
-    @staticmethod
-    def _match_name_only(lhs, rhs):
-        if None in [lhs.name, rhs.name]:
-            return
-        return lhs.name == rhs.name
+    def _match_name_only(self, rhs):
+        if rhs.name is None:
+            return True
+        return self.name == rhs.name
 
-    @staticmethod
-    def _match_action_only(lhs, rhs):
-        if lhs.action is None:
-            return bool(rhs.action)
+    def _match_action_only(self, rhs):
         if rhs.action is None:
-            return bool(lhs.action)
-        return bool(lhs.action & rhs.action)
+            return True
+        return bool(self.action & rhs.action)
 
-    @staticmethod
-    def _match_always(lhs, rhs):
+    def _match_always(self, rhs):
         return True
 
     def is_match(self, expose_identifier, message=None):
-        if self.functions[0](self, expose_identifier):
+        if self.functions[0](expose_identifier):
             return self.functions[1](message)
         return False
 
@@ -212,7 +205,7 @@ class _weakmethod_ref:
         return types.MethodType(self._func, self._obj())
 
 
-class _weakfunction_ref(object):
+class _weakfunction_ref:
     """This method is arange version of Python Cookbook 2nd 6.10"""
     __slots__ = ("_func")
     def __init__(self, fn):
@@ -240,10 +233,13 @@ class Transporter:
 
     def twitter(self, id_obj, args, kwargs, counter=100):
         message = Message(id_obj, args, kwargs, counter)
-        wildcard_actions = self._followers.get(None, [])
-        certaion_actions = self._followers.get(id_obj.name, [])
-        for follower in itertools.chain(certaion_actions, wildcard_actions):
-            following_id, function = follower
+        if id_obj.name is None:
+            actions = self._followers.values()
+        else:
+            wildcard_actions = self._followers.get(None, [])
+            certain_actions = self._followers.get(id_obj.name, [])
+            actions = [wildcard_actions, certain_actions]
+        for following_id, function in itertools.chain(*actions):
             if not following_id.is_match(id_obj, message):
                 continue
             if function() is None:
@@ -252,7 +248,7 @@ class Transporter:
                 function()(message)
 
 
-class RootTransporter(object):
+class RootTransporter:
     _default_namespace = None
     _namespaces = {}
 
@@ -299,7 +295,7 @@ class RootTransporter(object):
         del cls._pool[:]
 
 
-class MethodDecorator(object):
+class MethodDecorator:
     """This class is attached to exposition/following functions/methods.
 
     After initialization, this shows any information to draw connections.
@@ -420,7 +416,7 @@ class Follower(type):
         return instance
 
 
-class Message(object):
+class Message:
     def __init__(self, id_obj, args, kwargs, counter):
         self._id_obj = id_obj
         self._args = args

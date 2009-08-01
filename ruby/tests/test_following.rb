@@ -19,21 +19,64 @@ class Sample2
   include BerryMQ::Follower
   attr_reader :called
   def initialize
-    @called = false
+    @called = 0
     super
   end
-  following("test2@test_ns2:entry")
+  following("sample2:entry")
   def test_follow_method(message)
-    @called = true
+    @called += 1
+  end
+  following("sample2:original")
+  def test_original_action(message)
+    @called += 1
+  end
+  following("sample3:entry")
+  def test_other_name(message)
+    @called +=1
   end
 end
 
 class TestMessageSending < Test::Unit::TestCase
   def test_regist
     sample = Sample2.new
-    #pp BerryMQ::show_followers
-    BerryMQ::twitter("test2@test_ns2:entry")
-    assert sample.called
+    BerryMQ::twitter("sample2:entry")
+    assert_equal 1, sample.called
+  end
+
+  def test_original_action
+    sample = Sample2.new
+    BerryMQ::twitter("sample2:original")
+    assert_equal 1, sample.called
+  end
+
+  def test_wildcard_action_1
+    sample = Sample2.new
+    BerryMQ::twitter("sample2:*")
+    assert_equal 2, sample.called
+  end
+
+  def test_wildcard_action_2
+    sample = Sample2.new
+    BerryMQ::twitter("sample2")
+    assert_equal 2, sample.called
+  end
+
+  def test_wildcard_name
+    sample = Sample2.new
+    BerryMQ::twitter("*:entry")
+    assert_equal 2, sample.called
+  end
+
+  def test_wildcard_all_1
+    sample = Sample2.new
+    BerryMQ::twitter("*:*")
+    assert_equal 3, sample.called
+  end
+
+  def test_wildcard_all_2
+    sample = Sample2.new
+    BerryMQ::twitter("*")
+    assert_equal 3, sample.called
   end
 end
 

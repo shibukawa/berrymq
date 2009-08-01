@@ -21,10 +21,13 @@ module BerryMQ
 
     def twitter_local(id_obj, args, kwargs)
       message = Message.new(id_obj, args, kwargs)
-      wildcard_actions = @followers[nil]
-      certain_actions = @followers[id_obj.name]
+      if id_obj.name == nil
+        actions = @followers.values
+      else
+        actions = [@followers[nil], @followers[id_obj.name]]
+      end
       remove_list = []
-      BerryMQ::Util::iter_chain(wildcard_actions, certain_actions) { |follow|
+      BerryMQ::Util::iter_chain(*actions) { |follow|
         following_id, fun = follow
         next unless following_id.is_match(id_obj, message)
         if fun.alive?

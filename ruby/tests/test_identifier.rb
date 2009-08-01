@@ -14,15 +14,27 @@ class IdentiferTest < Test::Unit::TestCase
     assert follower.is_match(exposer)
   end
 
+  def test_not_match
+    exposer = BerryMQ::Identifier.new("id_sample1:entry")
+    follower = BerryMQ::Identifier.new("id_sample1:exit")
+    assert !follower.is_match(exposer)
+  end
+
   def test_wildcard_action
     exposer = BerryMQ::Identifier.new("id_sample3:test")
     follower = BerryMQ::Identifier.new("id_sample3:*")
     assert follower.is_match(exposer)
   end
 
-  def test_wildcard_name
+  def test_wildcard_name1
     exposer = BerryMQ::Identifier.new("id_sample4:entry")
     follower = BerryMQ::Identifier.new("*:entry")
+    assert follower.is_match(exposer)
+  end
+
+  def test_wildcard_name2
+    exposer = BerryMQ::Identifier.new("*:entry")
+    follower = BerryMQ::Identifier.new("id_sample4:entry")
     assert follower.is_match(exposer)
   end
 

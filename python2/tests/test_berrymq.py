@@ -19,9 +19,14 @@ class IdentifierTest(unittest.TestCase):
         follower = berrymq.Identifier("id_sample3:*")
         self.assert_(follower.is_match(exposer))
 
-    def test_wildcard_name(self):
+    def test_wildcard_name_1(self):
         exposer = berrymq.Identifier("id_sample4:entry")
         follower = berrymq.Identifier("*:entry")
+        self.assert_(follower.is_match(exposer))
+
+    def test_wildcard_name_2(self):
+        exposer = berrymq.Identifier("*:entry")
+        follower = berrymq.Identifier("id_sample4:entry")
         self.assert_(follower.is_match(exposer))
 
     def test_wildcard_all_1(self):
@@ -185,6 +190,13 @@ class TestMessageSendAndReceive(unittest.TestCase):
         sample_expose("not match")
         self.assertEqual(["expose"], call_history)
 
+    def test_wildcard(self):
+        call_history = []
+        @berrymq.following_function("sample10:test")
+        def sample(message):
+            call_history.append("called")
+        berrymq.twitter("*:test")
+        self.assertEqual(["called"], call_history)
 
     def _test_composite_condition(self):
         call_history = []

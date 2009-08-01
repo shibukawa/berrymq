@@ -102,31 +102,24 @@ class Identifier(object):
             action = ",".join(sorted(self.action))
         return "%s:%s" % (name, action)
 
-    @classmethod
-    def _match_all(cls, lhs, rhs):
-        return cls._match_name_only(lhs, rhs) \
-            and cls._match_action_only(lhs, rhs)
+    def _match_all(self, rhs):
+        return self._match_name_only(rhs) and self._match_action_only(rhs)
 
-    @staticmethod
-    def _match_name_only(lhs, rhs):
-        if None in [lhs.name, rhs.name]:
-            return
-        return lhs.name == rhs.name
+    def _match_name_only(self, rhs):
+        if rhs.name is None:
+            return True
+        return self.name == rhs.name
 
-    @staticmethod
-    def _match_action_only(lhs, rhs):
-        if lhs.action is None:
-            return bool(rhs.action)
+    def _match_action_only(self, rhs):
         if rhs.action is None:
-            return bool(lhs.action)
-        return bool(lhs.action & rhs.action)
+            return True
+        return bool(self.action & rhs.action)
 
-    @staticmethod
-    def _match_always(lhs, rhs):
+    def _match_always(self, rhs):
         return True
 
     def is_match(self, expose_identifier, message=None):
-        if self.functions[0](self, expose_identifier):
+        if self.functions[0](expose_identifier):
             return self.functions[1](message)
         return False
 
@@ -197,17 +190,17 @@ class _weakfunction_ref(object):
 
 class Transporter(object):
     def __init__(self):
-        self.followers = {}
+        self._followers = {}
 
     def get_valid_followers(self):
-        for name, followers in self.followers.items():
+        for name, followers in self._followers.items():
             for id_obj, function_wrapper in followers:
                 function = function_wrapper()
                 if function is not None:
                     yield id_obj, function
 
     def regist_follower(self, id_obj, function):
-        followers = self.followers.setdefault(id_obj.name, [])
+        followers = self._followers.setdefault(id_obj.name, [])
         followers.append((id_obj, function))
 
     def twitter(self, id_obj, args, kwargs, counter=100):
@@ -217,10 +210,13 @@ class Transporter(object):
 
     def twitter_local(self, id_obj, args, kwargs, counter=100):
         message = Message(id_obj, args, kwargs, counter)
-        wildcard_actions = self.followers.get(None, [])
-        certaion_actions = self.followers.get(id_obj.name, [])
-        for follower in itertools.chain(certaion_actions, wildcard_actions):
-            following_id, function = follower
+        if id_obj.name is None:
+            actions = self._followers.values()
+        else:
+            wildcard_actions = self._followers.get(None, [])
+            certain_actions = self._followers.get(id_obj.name, [])
+            actions = [wildcard_actions, certain_actions]
+        for following_id, function in itertools.chain(*actions):
             if not following_id.is_match(id_obj, message):
                 continue
             if function() is None:
