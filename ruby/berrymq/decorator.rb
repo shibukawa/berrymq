@@ -6,63 +6,90 @@ module BerryMQ
   #Internal use only
   #
   module DecoratorManager
-    @@__decorators = Hash.new {|hash, key| hash[key] = []}
-    def self.new_decorator(klass, key, id_obj, args)
-      @@__decorators[klass].push(Decorator.new(key, id_obj, args))
+    @@decorators = Hash.new do |hash, key| 
+      hash[key] = {:is_init=>false, :decorators=>[]}
     end
+
+    def self.new_decorator(klass, key, id_obj, args)
+      @@decorators[klass][:decorators].push(Decorator.new(key, id_obj, args))
+    end
+
     def self.method_added(klass, method_name)
-      last_obj = @@__decorators[klass].last
+      last_obj = @@decorators[klass][:decorators].last
       if last_obj != nil
         last_obj.method_name = method_name
-        @@__decorators[klass].push(nil)
+        @@decorators[klass][:decorators].push(nil)
       end
     end
-    def self.get_decorators(klass)
-      @@__decorators[klass]
+
+    def self.get(klass)
+      @@decorators[klass][:decorators]
     end
+
+    def self.is_init?(klass)
+      @@decorators[klass][:is_init]
+    end
+
+    def self.set_init_flag(klass)
+      @@decorators[klass][:is_init] = true
+    end
+
     def self.decorate_object(target_obj)
       auto_twitter = nil
-      self.get_decorators(target_obj.class).each {|decorator|
-        next if decorator == nil
-        auto_twitter = decorator if decorator.key == :auto_twitter
-      }
-      self.override_method(target_obj, auto_twitter) if auto_twitter != nil
-      self.get_decorators(target_obj.class).each {|decorator|
+      if not self.is_init?(target_obj.class)
+        self.get(target_obj.class).each do |decorator|
+          next if decorator == nil
+          if decorator.key == :auto_twitter
+            self.override_method(target_obj, decorator)
+          end
+        end
+        self.set_init_flag(target_obj.class)
+      end
+      self.get(target_obj.class).each do |decorator|
         next if decorator == nil
         if decorator.key == :following
           BerryMQ::RootTransporter::regist_follower(target_obj, decorator)
         end
-      }      
+      end
     end
 
     def self.override_method(target_obj, decorator)
       if decorator != nil
-        id_ojb = decorator.id
-        method_name = decorator.method_name
-        method_obj = target_obj.method(method_name)
-        entry, exit = auto_twitter.args
-        if entry && exit
+        id_obj = decorator.id
+        target_method = decorator.method_name
+        original_method = :"original_#{target_method}"
+        entry_flag, exit_flag = decorator.args
+        if entry_flag && exit_flag
           entry_id = BerryMQ::Identifier.new(id_obj, "entry")
           exit_id = BerryMQ::Identifier.new(id_obj, "exit")
-          target_obj.__send__(:define_method, method_name) { |args|
-            BerryMQ::twitter(entry_id, args)
-            result = method_obj.call(*args)
-            BerryMQ::twitter(exit_id, result)
-            result
-          }
-        elsif entry == true
+          target_obj.class.class_eval do
+            alias_method original_method, target_method
+            define_method target_method do |*args|  
+              BerryMQ::twitter(entry_id, args)
+              result = __send__ original_method, *args  
+              BerryMQ::twitter(exit_id, result)
+              return result
+            end  
+          end
+        elsif entry_flag == true
           entry_id = BerryMQ::Identifier.new(id_obj, "entry")
-          target_obj.__send__(:define_method, method_name) { |args|
-            BerryMQ::twitter(entry_id, args)
-            method_obj.call(*args)
-          }
-        elsif exit == true
+          target_obj.class.class_eval do
+            alias_method original_method, target_method
+            define_method target_method do |*args|
+              BerryMQ::twitter(entry_id, args)
+              __send__ original_method, *args  
+            end  
+          end
+        elsif exit_flag == true
           exit_id = BerryMQ::Identifier.new(id_obj, "exit")
-          target_obj.__send__(:define_method, method_name) { |args|
-            result = method_obj.call(*args)
-            BerryMQ::twitter(exit_id, result)
-            result
-          }
+          target_obj.class.class_eval do
+            alias_method original_method, target_method
+            define_method target_method do |*args|  
+              result = __send__ original_method, *args
+              BerryMQ::twitter(exit_id, result)
+              return result
+            end  
+          end
         end
       end
     end

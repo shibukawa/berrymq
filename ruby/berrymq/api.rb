@@ -18,15 +18,13 @@ module BerryMQ
       BerryMQ::DecoratorManager::new_decorator(self, :following, id_obj, [])
     end
 
-    def auto_twitter(identifier, entry=false, exit=false)
-      id_obj = BerryMQ::Identifier(identifier)
+    def auto_twitter(identifier)
+      id_obj = BerryMQ::Identifier.new(identifier)
       if id_obj.action != nil
-        exit = true if id_obj.action.include?("exit")
-        entry = true if id_obj.action.include?("entry")
+        args = [id_obj.action.include?("entry"), id_obj.action.include?("exit")]
       else
-        exit = entry = true
+        args = [true, true]
       end
-      args = [entry, exit]
       BerryMQ::DecoratorManager::new_decorator(self,:auto_twitter,id_obj,args)
     end
 

@@ -23,7 +23,10 @@ module BerryMQ
     attr_reader :name, :action, :namespace
     def initialize(key_or_identifier, action=nil)
       @functions = [nil, nil]
-      if action != nil
+      if key_or_identifier.kind_of?(Identifier)
+        if action == nil
+          action = key_or_identifier.action.to_a.first
+        end
         @name = key_or_identifier.name
         @namespace = key_or_identifier.namespace
         @action = Set.new [action]
