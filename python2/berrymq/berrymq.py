@@ -5,6 +5,7 @@ import new
 import sys
 import copy
 import Queue as queue
+import heapq
 import types
 import weakref
 import threading
@@ -476,11 +477,11 @@ class Message(object):
 
     @property
     def name(self):
-        return self._id_obj._name
+        return self._id_obj.name
 
     @property
     def action(self):
-        return self._id_obj._action
+        return self._id_obj.action
 
     @property
     def args(self):
@@ -621,3 +622,72 @@ class TransporterReceiver(object):
         for server in self.servers.itervalues():
             server.send_twitter(id_obj.id_str(), args, kwargs)
         return True
+
+
+class _PriorityQueue(queue.Queue):
+    # http://code.activestate.com/recipes/87369/
+    def _init(self, maxsize):
+        self.maxsize = maxsize
+        self.queue = []
+
+    def _put(self, item):
+        return heapq.heappush(self.queue, item)
+
+    def _get(self):
+        return heapq.heappop(self.queue)
+
+    def _receive_message(self, message, priority=10):
+        self.put((priority, message))
+
+
+Empty = queue.Empty
+
+
+class QueueManager(object):
+    _queues = {}
+    @classmethod
+    def regist_queue(cls, filter_id, shared):
+        queues = cls._queues.setdefault(filter_id, {})
+        id_obj = Identifier(filter_id)
+        if len(queues) == 0:
+            queues["shared"] = None
+            queues["standalones"] = []
+        if shared:
+            if queues["shared"] is None:
+                queue_obj = _PriorityQueue(0)
+                queues["shared"] = queue_obj
+                RootTransporter.regist_follower(id_obj, 
+                    _weakmethod_ref(queue_obj._receive_message))
+            return queues["shared"]
+        else:
+            queue_obj = _PriorityQueue(0)
+            queues["standalones"].append(queue_obj)
+            RootTransporter.regist_follower(id_obj, 
+                _weakmethod_ref(queue_obj._receive_message))
+            return queue_obj
+
+
+class Queue(object):
+    def __init__(self, filter_id, shared=False):
+        if filter_id is not None:
+            self._backend_queue = QueueManager.regist_queue(filter_id, shared)
+        else:
+            self._backend_queue = None
+
+    def empty(self):
+        return self._backend_queue.empty()
+
+    def full(self):
+        return self._backend_queue.full()
+
+    def qsize(self):
+        return self._backend_queue.qsize()
+
+    def get(self, block=True, timeout=None):
+        value = self._backend_queue.get(block, timeout)
+        if value is None:
+            return value
+        return value[1]
+
+    def get_nowait(self):
+        return self.get(block=False)

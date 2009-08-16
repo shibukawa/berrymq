@@ -14,6 +14,7 @@ def show_usage(alert_version=False):
   *target
     --all:      run all test
     --basic:    test basic features only
+    --pull:     test pull API
     --parallel: test multithreading feature only(slow)
     --jsonrpc:  test jsonrpc components(slow)
     --1st_node: network test(run this first)
@@ -45,6 +46,10 @@ def main():
     if "--basic" in sys.argv or "--all" in sys.argv:
         import tests.test_berrymq
         suite.addTest(tests.test_berrymq.test_setup(berrymq))
+
+    if "--pull" in sys.argv or "--all" in sys.argv:
+        import tests.test_berrymq_pull
+        suite.addTest(tests.test_berrymq_pull.test_setup(berrymq))
 
     if "--parallel" in sys.argv or "--all" in sys.argv:
         import tests.test_berrymq_parallel
