@@ -1,0 +1,1 @@
+Search.setIndex({desctypes:{},terms:{berrymq:[0,1],search:1,document:1,welcom:1,index:[0,1],modul:1,indic:1,queue:0,tini:0,html:0,messag:0,tabl:1,content:1,html_index:0,page:1,librari:0,introduct:[0,1]},titles:["Introduction","Welcome to berryMQ&#8217;s documentation!"],modules:{},descrefs:{},filenames:["intro","contents"]})
