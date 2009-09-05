@@ -1,5 +1,3 @@
-html_index = 'index.html'
-
 Introduction
 ============
 

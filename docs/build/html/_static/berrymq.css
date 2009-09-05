@@ -1,0 +1,19 @@
+div.body h1 { 
+    background-image: url("heading1.png");
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    padding-left: 150px;
+}
+
+div.body h2 { 
+    background-image: url("heading2.png");
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    padding-left: 150px;
+}
+
+div.document {
+    background-image: url("sidebar.png");
+    background-repeat: no-repeat;
+    background-position: left top;
+}

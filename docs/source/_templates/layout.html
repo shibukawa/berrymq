@@ -1,0 +1,10 @@
+{% extends "!layout.html" %}
+
+{% block extrahead %}
+        <link rel=stylesheet type="text/css" href="_static/berrymq.css">   
+{% endblock %}
+
+{% block rootrellink %}
+        <li><a href="{{ pathto('index') }}">berryMQ top</a>&nbsp;|&nbsp;</li>
+        <li><a href="{{ pathto('contents') }}">Document</a>&raquo;<li>
+{% endblock %}

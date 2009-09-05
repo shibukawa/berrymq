@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% set title = 'Overview' %}
+{% block body %}
+  <h1>Welcome</h1>
+
+  <p>berryMQ is a on-memory tiny message queuing library. Project goal is &quot;programmer friendly MQ&quot;. This not aims reliability, persistency. It will support closs-languages messaging(Python, Ruby and so on).</p>
+
+  <p>Current version has following features:</p>
+  <ul>
+    <li><b>Push API:</b> event driven style API like twitter:-)</li>
+    <li><b>Pull API:</b> simple queue object</li>
+    <li><b>Multi language support:</b> Python(2.4 - 3.1) and Ruby(1.8.7, 1.9.1)</li>
+  </ul>
+  <p>Now following features are under construction:</p>
+  <ul>
+    <li><b>Inter-process communication:</b> communicate via JSON-RPC</li>
+  </ul>
+  <h2>Documentation</h2>
+  <ul>
+    <li><p class="biglink"><a class="biglink" href="{{ pathto("contents") }}">Contents</a><br/>
+      <span class="linkdescr">a complete table of contents</span></p></li>
+    <li><p class="biglink"><a class="biglink" href="{{ pathto("search") }}">Search page</a><br/>
+      <span class="linkdescr">search the documentation</span></p></li>
+    <li><p class="biglink"><a class="biglink" href="{{ pathto("genindex") }}">General Index</a><br/>
+      <span class="linkdescr">all functions, classes, terms</span></p></li>
+    <li><p class="biglink"><a class="biglink" href="{{ pathto("modindex") }}">Module Index</a><br/>
+      <span class="linkdescr">quick access to all documented modules</span></p></li>
+  </ul>
+  <h2>Get berryMQ</h2>
+  <p>Installer is now being prepared now.</p>
+  <p>The code is in a Mercurial repository, at
+    <tt><a href="http://bitbucket.org/shibu/berrymq/">http://bitbucket.org/shibu/berrymq/</a></tt>.
+  </p>
+
+{% endblock %}
