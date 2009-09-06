@@ -34,7 +34,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8'
 
 # The master toctree document.
-master_doc = 'contents'
+master_doc = 'index'
 
 # General information about the project.
 project = u'berryMQ'
@@ -100,8 +100,8 @@ html_theme_options = {
 "footerbgcolor":"#FFE4E1",
 "footertextcolor":"#556B2F",
 "sidebarbgcolor":"#FFC0CB",
-"sidebartextcolor":"#556B2F",
-"sidebarlinkcolor":"#CD5C5C",
+"sidebartextcolor":"#714513",
+"sidebarlinkcolor":"#4B0082",
 "relbarbgcolor":"#FAF0E6",
 "relbartextcolor":"#556B2F",
 "relbarlinkcolor":"#556B2F",
@@ -152,7 +152,7 @@ html_static_path = ['_static']
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {'index': 'index.html'}
+#html_additional_pages = {}
 
 # If false, no module index is generated.
 #html_use_modindex = True

@@ -6,5 +6,10 @@
 
 {% block rootrellink %}
         <li><a href="{{ pathto('index') }}">berryMQ top</a>&nbsp;|&nbsp;</li>
-        <li><a href="{{ pathto('contents') }}">Document</a>&raquo;<li>
+{% endblock %}
+
+{% block header %}
+<div style="background-color: white; margin: 0px 0px 0px 0px; width: 100%; padding-left: 50px;">
+<img src="_static/berrymq.png" alt="berryMQ logo"/>
+</div>
 {% endblock %}

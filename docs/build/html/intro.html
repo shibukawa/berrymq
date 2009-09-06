@@ -20,12 +20,16 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="berryMQ v0.1 documentation" href="index.html" />
-    <link rel="next" title="Thanks" href="thanks.html" />
-    <link rel="prev" title="Welcome to berryMQ’s documentation!" href="contents.html" />
+    <link rel="next" title="<no title>" href="api.html" />
+    <link rel="prev" title="Welcome" href="index.html" />
         <link rel=stylesheet type="text/css" href="_static/berrymq.css">   
 
   </head>
   <body>
+<div style="background-color: white; margin: 0px 0px 0px 0px; width: 100%; padding-left: 50px;">
+<img src="_static/berrymq.png" alt="berryMQ logo"/>
+</div>
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -33,13 +37,12 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="thanks.html" title="Thanks"
+          <a href="api.html" title="<no title>"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="contents.html" title="Welcome to berryMQ’s documentation!"
+          <a href="index.html" title="Welcome"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">berryMQ top</a>&nbsp;|&nbsp;</li>
-        <li><a href="contents.html">Document</a>&raquo;<li>
  
       </ul>
     </div>  
@@ -51,7 +54,93 @@
             
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>berryMQ is tiny message queue library.</p>
+<p><strong>berryMQ</strong> is a on-memory tiny message queuing library. Project goal is &#8220;programmer friendly MQ&#8221;. This not aims reliability, persistency. It will support cross-language messaging(Python, Ruby and so on).</p>
+<div class="section" id="push-api">
+<h2>Push API<a class="headerlink" href="#push-api" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="use-with-method-receiver">
+<h3>Use with method receiver<a class="headerlink" href="#use-with-method-receiver" title="Permalink to this headline">¶</a></h3>
+<p>writing ...</p>
+</div>
+<div class="section" id="use-with-function-receiver">
+<h3>Use with function receiver<a class="headerlink" href="#use-with-function-receiver" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This version supports python only.</p>
+</div>
+<p>This is the easiest way to use berryMQ. Show Python sample.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">berrymq</span> <span class="kn">import</span> <span class="p">(</span><span class="n">following_function</span><span class="p">,</span> <span class="n">twitter</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="nd">@following_function</span><span class="p">(</span><span class="s">&quot;*:log&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">receive_log</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;receive_log: </span><span class="si">%s</span><span class="s"> @ </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mf">0</span><span class="p">]))</span>
+
+<span class="nd">@following_function</span><span class="p">(</span><span class="s">&quot;*:command&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">run_command</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="c"># do job</span>
+    <span class="o">...</span>
+
+<span class="k">def</span> <span class="nf">do_something</span><span class="p">():</span>
+    <span class="n">twitter</span><span class="p">(</span><span class="s">&quot;do_something:log&quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">())</span>
+
+<span class="k">def</span> <span class="nf">on_start_button_pressed</span><span class="p">():</span>
+    <span class="n">twitter</span><span class="p">(</span><span class="s">&quot;start:command&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>There two sender functions and two receivers. <tt class="xref docutils literal"><span class="pre">twitter()</span></tt> is API for sending message. <tt class="xref docutils literal"><span class="pre">following_function()</span></tt> is a decorator for a receiver function. Message has a <em class="xref">identifier</em>. Identifier consists of two part <em class="xref">name</em> and <em class="xref">action</em>. Senders and receivers assert which message will be sended or is needed by identifier. Both of parts of identifier can use wild card(*).</p>
+<p>If you call <tt class="docutils literal"><span class="pre">do_something()</span></tt> function in above sample, this function send a message <tt class="docutils literal"><span class="pre">do_something:log</span></tt>. This message matches <tt class="docutils literal"><span class="pre">*:log</span></tt> filter of <tt class="docutils literal"><span class="pre">receive_log()</span></tt> function. So <tt class="docutils literal"><span class="pre">receive_log()</span></tt> function will be called. If there are more than one matched functions, all functions will be called.</p>
+<img alt="_images/sample_diagram_01.png" src="_images/sample_diagram_01.png" />
+</div>
+</div>
+<div class="section" id="pull-api">
+<h2>Pull API<a class="headerlink" href="#pull-api" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="inter-process-communication">
+<h2>Inter-Process Communication<a class="headerlink" href="#inter-process-communication" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is planning feature.</p>
+</div>
+<p>berryMQ planning inter-process communication. berryMQ sends message via JSON-RPC. So any language which can speak JSON-RPC will be able to connect.</p>
+<div class="section" id="style-01">
+<h3>Style 01:<a class="headerlink" href="#style-01" title="Permalink to this headline">¶</a></h3>
+<p>This is an quality connection style. Both side of berryMQ transport all message to each other. Message senders and receivers don&#8217;t take care which side messages come from/go to.</p>
+<img alt="_images/sample_diagram_02.png" src="_images/sample_diagram_02.png" />
+</div>
+<div class="section" id="style-02">
+<h3>Style 02:<a class="headerlink" href="#style-02" title="Permalink to this headline">¶</a></h3>
+<p>One side process doesn&#8217;t receive but send message. It is suitable style for logging. Server/Client model.</p>
+<img alt="_images/sample_diagram_03.png" src="_images/sample_diagram_03.png" />
+</div>
+<div class="section" id="style-03">
+<h3>Style 03:<a class="headerlink" href="#style-03" title="Permalink to this headline">¶</a></h3>
+<p>Usual Message Queue style. Create queue at server side. Client can use only pull API.</p>
+<img alt="_images/sample_diagram_05.png" src="_images/sample_diagram_05.png" />
+</div>
+</div>
+<div class="section" id="callback-style-api">
+<h2>Callback Style API<a class="headerlink" href="#callback-style-api" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is planning feature.</p>
+</div>
+<p><tt class="xref docutils literal"><span class="pre">twitter()</span></tt> is a monologue function. Method sender doesn&#8217;t know who listening to that message. Although it will encourage loose-coupling, it is not convenient in some case i.e. method-chain. I&#8217;m planning &#8220;talk-back&#8221; API:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">berrymq</span> <span class="kn">import</span> <span class="p">(</span><span class="n">following_function</span><span class="p">,</span> <span class="n">talk</span><span class="p">)</span>
+
+<span class="nd">@following_function</span><span class="p">(</span><span class="s">&quot;*:process&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">do_process</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="o">...</span> <span class="n">do</span> <span class="n">something</span>
+
+<span class="nd">@following_function</span><span class="p">(</span><span class="s">&quot;*:log_result&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">receive_result</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">on_unittest_start_button_pressed</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="n">talk</span><span class="p">(</span><span class="s">&quot;test:process&quot;</span><span class="p">,</span> <span class="s">&quot;test:log_result&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><tt class="xref docutils literal"><span class="pre">talk()</span></tt> function has two identifiers. Second one is target about callback. After calling first function(in this case <tt class="docutils literal"><span class="pre">do_process()</span></tt>), Second function will be called with the result of first function.</p>
+</div>
 </div>
 
 
@@ -60,12 +149,32 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="">Introduction</a><ul>
+<li><a class="reference external" href="#push-api">Push API</a><ul>
+<li><a class="reference external" href="#use-with-method-receiver">Use with method receiver</a></li>
+<li><a class="reference external" href="#use-with-function-receiver">Use with function receiver</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#pull-api">Pull API</a></li>
+<li><a class="reference external" href="#inter-process-communication">Inter-Process Communication</a><ul>
+<li><a class="reference external" href="#style-01">Style 01:</a></li>
+<li><a class="reference external" href="#style-02">Style 02:</a></li>
+<li><a class="reference external" href="#style-03">Style 03:</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#callback-style-api">Callback Style API</a></li>
+</ul>
+</li>
+</ul>
+
             <h4>Previous topic</h4>
-            <p class="topless"><a href="contents.html"
-                                  title="previous chapter">Welcome to berryMQ&#8217;s documentation!</a></p>
+            <p class="topless"><a href="index.html"
+                                  title="previous chapter">Welcome</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="thanks.html"
-                                  title="next chapter">Thanks</a></p>
+            <p class="topless"><a href="api.html"
+                                  title="next chapter">&lt;no title&gt;</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/intro.txt"
@@ -95,13 +204,12 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="thanks.html" title="Thanks"
+          <a href="api.html" title="<no title>"
              >next</a> |</li>
         <li class="right" >
-          <a href="contents.html" title="Welcome to berryMQ’s documentation!"
+          <a href="index.html" title="Welcome"
              >previous</a> |</li>
         <li><a href="index.html">berryMQ top</a>&nbsp;|&nbsp;</li>
-        <li><a href="contents.html">Document</a>&raquo;<li>
  
       </ul>
     </div>

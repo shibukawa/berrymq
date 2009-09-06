@@ -2,18 +2,23 @@ div.body h1 {
     background-image: url("heading1.png");
     background-repeat: no-repeat;
     background-position: left bottom;
-    padding-left: 150px;
+    padding-left: 180px;
 }
 
 div.body h2 { 
     background-image: url("heading2.png");
     background-repeat: no-repeat;
     background-position: left bottom;
-    padding-left: 150px;
+    padding-left: 180px;
 }
 
 div.document {
+    background-color: #ffc0cb;
+}
+
+div.documentwrapper {
     background-image: url("sidebar.png");
+    background-color: transparent;
     background-repeat: no-repeat;
     background-position: left top;
 }
