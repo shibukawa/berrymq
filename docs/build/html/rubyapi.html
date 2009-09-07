@@ -1,0 +1,192 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Ruby API &mdash; berryMQ v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="berryMQ v0.1 documentation" href="index.html" />
+    <link rel="next" title="Thanks" href="thanks.html" />
+    <link rel="prev" title="Python API" href="pythonapi.html" />
+        <link rel=stylesheet type="text/css" href="_static/berrymq.css">   
+
+  </head>
+  <body>
+<div style="background-color: white; margin: 0px 0px 0px 0px; width: 100%; padding-left: 50px;">
+<img src="_static/berrymq.png" alt="berryMQ logo"/>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="thanks.html" title="Thanks"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pythonapi.html" title="Python API"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">berryMQ top</a>&nbsp;|&nbsp;</li>
+ 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ruby-api">
+<h1>Ruby API<a class="headerlink" href="#ruby-api" title="Permalink to this headline">¶</a></h1>
+<p>Ruby API is similar to Python API. I this section show samples in Ruby.
+If you need detail information see Python API reference.</p>
+<div class="section" id="decorators">
+<span id="index-17"></span><h2>Decorators<a class="headerlink" href="#decorators" title="Permalink to this headline">¶</a></h2>
+<p>berryMQ provides module methods <tt class="docutils literal"><span class="pre">following()</span></tt> and <tt class="docutils literal"><span class="pre">auto_twitter()</span></tt>. They works like <tt class="docutils literal"><span class="pre">Class.public</span></tt> and <tt class="docutils literal"><span class="pre">Class.private</span></tt> and so on.
+Use this like following:</p>
+<div class="highlight-ruby"><div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;berrymq&#39;</span>
+
+<span class="k">class</span> <span class="nc">Logger</span>
+  <span class="kp">include</span> <span class="no">BerryMQ</span><span class="o">::</span><span class="no">Follower</span>
+
+  <span class="n">following</span><span class="p">(</span><span class="s2">&quot;*:log&quot;</span><span class="p">)</span>
+  <span class="k">def</span> <span class="nf">receive_log</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">.</span><span class="o">.</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">Class.public</span></tt> keeps effect until other module method will be called,
+But this functions effect only the next method definition.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt>Python decorator <a title="berrymq.following" class="reference external" href="pythonapi.html#berrymq.following"><tt class="xref docutils literal"><span class="pre">berrymq.following()</span></tt></a></dt>
+<dd>Set target funcion as receiver.</dd>
+<dt>Python decorator <a title="berrymq.auto_twitter" class="reference external" href="pythonapi.html#berrymq.auto_twitter"><tt class="xref docutils literal"><span class="pre">berrymq.auto_twitter()</span></tt></a></dt>
+<dd>Send message if target function will be called.</dd>
+<dt>Python meta class <a title="berrymq.Follower" class="reference external" href="pythonapi.html#berrymq.Follower"><tt class="xref docutils literal"><span class="pre">berrymq.Follower</span></tt></a></dt>
+<dd>This class adds berryMQ features to target class.</dd>
+</dl>
+</div>
+<div class="admonition warning" id="index-18">
+<p class="first admonition-title">Warning</p>
+<p class="last">Ruby implementation uses module including mechanism to class.
+So you can&#8217;t set module function receiver like Python.</p>
+</div>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<p>You can use <a title="berrymq.twitter" class="reference external" href="pythonapi.html#berrymq.twitter"><tt class="xref docutils literal"><span class="pre">berrymq.twitter()</span></tt></a> function like this:</p>
+<div class="highlight-ruby"><div class="highlight"><pre><span class="nb">require</span> <span class="s1">&#39;berrymq&#39;</span>
+
+<span class="k">def</span> <span class="nf">on_button_pressed</span>
+  <span class="no">BerryMQ</span><span class="o">::</span><span class="n">twitter</span><span class="p">(</span><span class="s2">&quot;on_button_pressed:log&quot;</span><span class="p">)</span>
+  <span class="o">.</span>
+  <span class="o">.</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a title="berrymq.twitter" class="reference external" href="pythonapi.html#berrymq.twitter"><tt class="xref docutils literal"><span class="pre">berrymq.twitter()</span></tt></a></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In future release, if last paramter is <tt class="docutils literal"><span class="pre">Hash</span></tt>, it will pass as kwargs.</p>
+</div>
+</div>
+<div class="section" id="classes">
+<span id="index-19"></span><h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<p>now writing...</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="">Ruby API</a><ul>
+<li><a class="reference external" href="#decorators">Decorators</a></li>
+<li><a class="reference external" href="#functions">Functions</a></li>
+<li><a class="reference external" href="#classes">Classes</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="pythonapi.html"
+                                  title="previous chapter">Python API</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="thanks.html"
+                                  title="next chapter">Thanks</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/rubyapi.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="thanks.html" title="Thanks"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pythonapi.html" title="Python API"
+             >previous</a> |</li>
+        <li><a href="index.html">berryMQ top</a>&nbsp;|&nbsp;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009, SHIBUKAWA Yoshiki.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>
