@@ -1,0 +1,15 @@
+Metadata-Version: 1.0
+Name: berrymq
+Version: 0.1
+Summary: Small message queue system for building applications
+Home-page: http://bitbucket.org/shibu/berrymq/
+Author: SHIBUKAWA Yoshiki
+Author-email: yoshiki at shibu.jp
+License: MIT License
+Description: Programmer friendly message queue module. It supports push/pull API, thread pool
+Keywords: python ruby message queue mq
+Platform: UNKNOWN
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
