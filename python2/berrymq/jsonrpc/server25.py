@@ -59,8 +59,10 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
     def verify_request(self, request, client_address):
         return request is not None
 
-    def shutdown(self):
+    def shutdown(self, immediately = True):
         self.__serving = False
+        if not immediately:
+            return
         self.__is_shut_down.wait()
         if self.__thread:
             self.__thread.join()
