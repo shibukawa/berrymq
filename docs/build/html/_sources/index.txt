@@ -1,4 +1,3 @@
-=======
 Welcome
 =======
 
@@ -19,18 +18,13 @@ Now following features are under construction:
 Documentation
 =============
 
-Main Contents
--------------
-
 .. toctree::
    :maxdepth: 2
 
    intro.rst
-   api.rst
+   pythonapi.rst
+   rubyapi.rst
    thanks.rst
-
-Support Contents
-----------------
 
 * :ref:`search`
   

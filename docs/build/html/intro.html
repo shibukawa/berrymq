@@ -20,7 +20,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="berryMQ v0.1 documentation" href="index.html" />
-    <link rel="next" title="<no title>" href="api.html" />
+    <link rel="next" title="Python API" href="pythonapi.html" />
     <link rel="prev" title="Welcome" href="index.html" />
         <link rel=stylesheet type="text/css" href="_static/berrymq.css">   
 
@@ -37,7 +37,10 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="api.html" title="<no title>"
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="pythonapi.html" title="Python API"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Welcome"
@@ -54,9 +57,61 @@
             
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p><strong>berryMQ</strong> is a on-memory tiny message queuing library. Project goal is &#8220;programmer friendly MQ&#8221;. This not aims reliability, persistency. It will support cross-language messaging(Python, Ruby and so on).</p>
+<p><strong>berryMQ</strong> is a on-memory tiny message queuing library. Project goal is &#8220;programmer friendly MQ&#8221;. This doesn&#8217;t aim reliability, persistency. It will support cross-language messaging(Python, Ruby and so on).</p>
+<div class="section" id="identifier">
+<span id="id1"></span><h2>Identifier<a class="headerlink" href="#identifier" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<p>This is a key rule of berryMQ. Identifier is used as:</p>
+<ul class="simple">
+<li>Message ID</li>
+<li>receive filter</li>
+</ul>
+<p>Identifier consists of two parts. First one is called <tt class="docutils literal"><span class="pre">name</span></tt>, second is
+<tt class="docutils literal"><span class="pre">action</span></tt>. You can specify it following form:</p>
+<div class="highlight-rest"><div class="highlight"><pre>&quot;name:action&quot;
+</pre></div>
+</div>
+<p>Identifier can accept wildcard(*). If there is an identifier <tt class="docutils literal"><span class="pre">&quot;test:*&quot;</span></tt>,
+it matchs both <tt class="docutils literal"><span class="pre">&quot;test:run&quot;</span></tt> and <tt class="docutils literal"><span class="pre">&quot;test:stop&quot;</span></tt>. Show all variations:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="28%" />
+<col width="31%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Sample</th>
+<th class="head">Name</th>
+<th class="head">Action</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal"><span class="pre">test:run</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">test</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">run</span></tt></td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">test:*</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">test</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">*</span></tt></td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">*:run</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">*</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">run</span></tt></td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">*:*</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">*</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">*</span></tt></td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">test</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">test</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">*</span></tt></td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+</div>
 <div class="section" id="push-api">
-<h2>Push API<a class="headerlink" href="#push-api" title="Permalink to this headline">¶</a></h2>
+<span id="index-22"></span><h2>Push API<a class="headerlink" href="#push-api" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="use-with-method-receiver">
 <h3>Use with method receiver<a class="headerlink" href="#use-with-method-receiver" title="Permalink to this headline">¶</a></h3>
 <p>writing ...</p>
@@ -87,16 +142,18 @@
     <span class="n">twitter</span><span class="p">(</span><span class="s">&quot;start:command&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>There two sender functions and two receivers. <tt class="xref docutils literal"><span class="pre">twitter()</span></tt> is API for sending message. <tt class="xref docutils literal"><span class="pre">following_function()</span></tt> is a decorator for a receiver function. Message has a <em class="xref">identifier</em>. Identifier consists of two part <em class="xref">name</em> and <em class="xref">action</em>. Senders and receivers assert which message will be sended or is needed by identifier. Both of parts of identifier can use wild card(*).</p>
+<p>There two sender functions and two receivers. <tt class="xref docutils literal"><span class="pre">twitter()</span></tt> is API for sending message. <tt class="xref docutils literal"><span class="pre">following_function()</span></tt> is a decorator for a receiver function. Message has a <a class="reference internal" href="#identifier"><em>Identifier</em></a>. Senders and receivers assert which message will be sended or is needed by identifier. Both of parts of identifier can use wild card(*).</p>
 <p>If you call <tt class="docutils literal"><span class="pre">do_something()</span></tt> function in above sample, this function send a message <tt class="docutils literal"><span class="pre">do_something:log</span></tt>. This message matches <tt class="docutils literal"><span class="pre">*:log</span></tt> filter of <tt class="docutils literal"><span class="pre">receive_log()</span></tt> function. So <tt class="docutils literal"><span class="pre">receive_log()</span></tt> function will be called. If there are more than one matched functions, all functions will be called.</p>
 <img alt="_images/sample_diagram_01.png" src="_images/sample_diagram_01.png" />
 </div>
 </div>
 <div class="section" id="pull-api">
-<h2>Pull API<a class="headerlink" href="#pull-api" title="Permalink to this headline">¶</a></h2>
+<span id="index-23"></span><h2>Pull API<a class="headerlink" href="#pull-api" title="Permalink to this headline">¶</a></h2>
+<p>writing..</p>
+<p>see <a title="berrymq.Queue" class="reference external" href="pythonapi.html#berrymq.Queue"><tt class="xref docutils literal"><span class="pre">berrymq.Queue</span></tt></a>.</p>
 </div>
 <div class="section" id="inter-process-communication">
-<h2>Inter-Process Communication<a class="headerlink" href="#inter-process-communication" title="Permalink to this headline">¶</a></h2>
+<span id="index-24"></span><h2>Inter-Process Communication<a class="headerlink" href="#inter-process-communication" title="Permalink to this headline">¶</a></h2>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">This is planning feature.</p>
@@ -104,7 +161,7 @@
 <p>berryMQ planning inter-process communication. berryMQ sends message via JSON-RPC. So any language which can speak JSON-RPC will be able to connect.</p>
 <div class="section" id="style-01">
 <h3>Style 01:<a class="headerlink" href="#style-01" title="Permalink to this headline">¶</a></h3>
-<p>This is an quality connection style. Both side of berryMQ transport all message to each other. Message senders and receivers don&#8217;t take care which side messages come from/go to.</p>
+<p>This is an equality connection style. Both side of berryMQ transport all message to each other. Message senders and receivers don&#8217;t take care which side messages come from/go to.</p>
 <img alt="_images/sample_diagram_02.png" src="_images/sample_diagram_02.png" />
 </div>
 <div class="section" id="style-02">
@@ -152,6 +209,7 @@
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="">Introduction</a><ul>
+<li><a class="reference external" href="#identifier">Identifier</a></li>
 <li><a class="reference external" href="#push-api">Push API</a><ul>
 <li><a class="reference external" href="#use-with-method-receiver">Use with method receiver</a></li>
 <li><a class="reference external" href="#use-with-function-receiver">Use with function receiver</a></li>
@@ -173,8 +231,8 @@
             <p class="topless"><a href="index.html"
                                   title="previous chapter">Welcome</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="api.html"
-                                  title="next chapter">&lt;no title&gt;</a></p>
+            <p class="topless"><a href="pythonapi.html"
+                                  title="next chapter">Python API</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/intro.txt"
@@ -204,7 +262,10 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="api.html" title="<no title>"
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pythonapi.html" title="Python API"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Welcome"

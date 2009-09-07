@@ -11,11 +11,11 @@ Thanks
 
   * `Voluntas <http://d.hatena.ne.jp/Voluntas/>`_ gives me much inspiration about distributed architecture via skype chat.
   * `Tokibito <http://d.hatena.ne.jp/nullpobug/>`_ helped me uplaoding to PyPI.
-  * `m_seki <http://d.hatena.ne.jp/m_seki/>`_ gave me idea of equality server/client model as dRuby(he is a dRuby auther). He and I are community member of `Tochigi Ruby <http://pub.cozmixng.org/~the-rwiki/rw-cgi.rb?cmd=view;name=toRuby>`_.
+  * `m_seki <http://d.hatena.ne.jp/m_seki/>`_ gave me idea of equality server/client model as dRuby(he is dRuby auther). He and I are community member of `Tochigi Ruby <http://pub.cozmixng.org/~the-rwiki/rw-cgi.rb?cmd=view;name=toRuby>`_.
 
 * Tochigi prefecture
 
-  Tochigi prefecture is first in strawberry production in Japan. The name of `berryMQ` comes from Tochigi prefecture which I live.
+  Tochigi prefecture is first in strawberry production in Japan. The name of `berryMQ` comes from Tochigi prefecture where I live.
 
 * Some images comes from flickr.
 

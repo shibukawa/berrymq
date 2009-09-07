@@ -4,7 +4,39 @@
 Introduction
 ============
 
-**berryMQ** is a on-memory tiny message queuing library. Project goal is "programmer friendly MQ". This not aims reliability, persistency. It will support cross-language messaging(Python, Ruby and so on).
+**berryMQ** is a on-memory tiny message queuing library. Project goal is "programmer friendly MQ". This doesn't aim reliability, persistency. It will support cross-language messaging(Python, Ruby and so on).
+
+.. _identifier:
+
+Identifier
+==========
+
+   This is a key rule of berryMQ. Identifier is used as:
+
+   * Message ID
+   * receive filter
+
+   Identifier consists of two parts. First one is called ``name``, second is
+   ``action``. You can specify it following form::
+
+      "name:action"
+
+   Identifier can accept wildcard(*). If there is an identifier ``"test:*"``,
+   it matchs both ``"test:run"`` and ``"test:stop"``. Show all variations:
+
+   ============ ======== =========
+   Sample       Name     Action
+   ============ ======== =========
+   ``test:run`` ``test`` ``run``
+   ``test:*``   ``test`` ``*``
+   ``*:run``    ``*``    ``run``
+   ``*:*``      ``*``    ``*``
+   ``test``     ``test`` ``*``
+   ============ ======== =========
+
+.. index::
+   single: Push API
+   single: API; Push
 
 Push API
 ========
@@ -43,14 +75,25 @@ This is the easiest way to use berryMQ. Show Python sample.
    def on_start_button_pressed():
        twitter("start:command")
    
-There two sender functions and two receivers. :func:`twitter` is API for sending message. :func:`following_function` is a decorator for a receiver function. Message has a :term:`identifier`. Identifier consists of two part :term:`name` and :term:`action`. Senders and receivers assert which message will be sended or is needed by identifier. Both of parts of identifier can use wild card(*).
+There two sender functions and two receivers. :func:`twitter` is API for sending message. :func:`following_function` is a decorator for a receiver function. Message has a :ref:`identifier`. Senders and receivers assert which message will be sended or is needed by identifier. Both of parts of identifier can use wild card(*).
 
 If you call ``do_something()`` function in above sample, this function send a message ``do_something:log``. This message matches ``*:log`` filter of ``receive_log()`` function. So ``receive_log()`` function will be called. If there are more than one matched functions, all functions will be called.
 
 .. image:: sample_diagram_01.png
 
+.. index::
+   single: Pull API
+   single: API; Pull
+
 Pull API
 ========
+
+writing..
+
+see :class:`berrymq.Queue`.
+
+.. index::
+   single: Inter-process communication
 
 Inter-Process Communication
 ===========================
@@ -64,7 +107,7 @@ berryMQ planning inter-process communication. berryMQ sends message via JSON-RPC
 Style 01:
 ---------
 
-This is an quality connection style. Both side of berryMQ transport all message to each other. Message senders and receivers don't take care which side messages come from/go to.
+This is an equality connection style. Both side of berryMQ transport all message to each other. Message senders and receivers don't take care which side messages come from/go to.
 
 .. image:: sample_diagram_02.png
 

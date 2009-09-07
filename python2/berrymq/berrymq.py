@@ -425,17 +425,17 @@ class Follower(type):
 
       class Logger(object):
           __metaclass__=Follower
-          @following_method("function", "call")
+          @following("function:call")
           def log_function_call(self, message):
               ...
 
           @classmethod
-          @following_classmethod("error", "raised")
+          @following_function("error:raised")
           def show_error(cls, message):
               ...
 
           @staticmethod
-          @following("thread", "created")
+          @following_function("thread:created")
           def log_thread(message):
               ...
     """

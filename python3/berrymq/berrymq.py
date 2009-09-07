@@ -1,53 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""Commitment oriented architecture framework implementations.
-
-This is my experimental idea.
-
-In Hollywood's raw, object B doesn't know when it called(System A).
-
-A -> B
-
-In This framework, it has different philosophy(System B).
-
-A ... I'm hungry
-  B ... Yes! Have a humbarger. Here you are!
-
-System A is allopoietic and system B is autopoietic(but it has no special
-features to generate copies). All objects in system B behave distributed
-autonomously. Its object knows boundary between itself and outer world.
-It knows what it can do and when it should work. In Hollywood's raw,
-It knows what it can do but it doesn't know when it should work.
-
-This implementation's API uses metaphor of twitter(but it does not follows
-people but message/event):
-
-  class A:
-    def do_something(self):
-      twitter("I'm hungry")
-
-  class B(__metaclass__=Follower):
-    @following("I'm hungry")
-    def give_hunberger(self, message):
-      print("Yes! Have a humbarger. Here you are!")
-
-Recent frameworks inject dependencies in setting up time. But all objects
-in this framework don't have dependencies at any time. In fact, you should use
-this mechanism between same level objects. I call it "society".
-Many systems (including real world) are hierarchical society.
-Any books says that 200 is the biggest members it can live in one group
-without any special rules and hierarchy.
-Between societies, you can use normal relationship(including Hallywoods raw).
-
-Have fun!
-
-This architecture inspired by Toradora!. It's Japanese nobel/cartoon.
-Characters in this pieces behave to give profit for others.
-They live strongly.
-This story is more impressed than Takeshi Kitano's films for me.
-
-"""
-
 import re
 import sys
 import heapq
@@ -454,17 +406,17 @@ class Follower(type):
     use like this:
 
       class Logger(metaclass=Follower):
-          @following_method("function", "call")
+          @following("function:call")
           def log_function_call(self, message):
               ...
 
           @classmethod
-          @following_classmethod("error", "raised")
+          @following_function("error:raised")
           def show_error(cls, message):
               ...
 
           @staticmethod
-          @following("thread", "created")
+          @following_function("thread:created")
           def log_thread(message):
               ...
     """
