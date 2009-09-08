@@ -21,10 +21,11 @@ Documentation
 .. toctree::
    :maxdepth: 2
 
-   intro.rst
-   pythonapi.rst
-   rubyapi.rst
-   thanks.rst
+   intro
+   pythonapi
+   rubyapi
+   jsonapi
+   thanks
 
 * :ref:`search`
   

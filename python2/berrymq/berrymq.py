@@ -4,6 +4,7 @@ import re
 import new
 import sys
 import copy
+import uuid
 import Queue as queue
 import heapq
 import types
@@ -594,7 +595,7 @@ def twitter(identifier, *args, **kwargs):
     RootTransporter.twitter(Identifier(identifier), args, kwargs)
 
 
-class TransporterReceiver(object):
+class TransporterReceiver(Object):
     def __init__(self, url):
         self.servers = {}
         self.my_url = url

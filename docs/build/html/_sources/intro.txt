@@ -104,6 +104,8 @@ Inter-Process Communication
 
 berryMQ planning inter-process communication. berryMQ sends message via JSON-RPC. So any language which can speak JSON-RPC will be able to connect.
 
+.. _inter_process_style01:
+
 Style 01:
 ---------
 
@@ -111,12 +113,16 @@ This is an equality connection style. Both side of berryMQ transport all message
 
 .. image:: sample_diagram_02.png
 
+.. _inter_process_style02:
+
 Style 02:
 ---------
 
 One side process doesn't receive but send message. It is suitable style for logging. Server/Client model.
 
 .. image:: sample_diagram_03.png
+
+.. _inter_process_style03:
 
 Style 03:
 ---------
