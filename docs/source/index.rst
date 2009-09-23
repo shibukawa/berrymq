@@ -25,6 +25,7 @@ Documentation
    pythonapi
    rubyapi
    jsonapi
+   features
    thanks
 
 * :ref:`search`

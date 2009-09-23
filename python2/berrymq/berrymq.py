@@ -17,7 +17,6 @@ try:
 except ImportError:
     functools = None
 
-import berrymq_network as network
 
 def _dummy(message):
     """Dummy guard condition function.
@@ -232,9 +231,16 @@ class Transporter(object):
 class RootTransporter(object):
     _default_namespace = None
     _namespaces = {}
+    _connections = None
 
     @classmethod
     def twitter(cls, id_obj, args, kwargs):
+        cls.twitter_local(id_obj, args, kwargs)
+        if cls._connections:
+            cls._connections.forward_message(id_obj, args, kwargs)
+
+    @classmethod
+    def twitter_local(cls, id_obj, args, kwargs):
         namespace = id_obj.namespace
         if namespace is None:
             namespace = cls._default_namespace
@@ -419,6 +425,27 @@ def auto_twitter(identifier, entry=False, exit=False):
     return _
 
 
+def twitter_exception(identifier, reraise=False, with_traceback=True):
+   id_obj = Identifier(identifier)
+   def _(func):
+       @functools.wraps(func)
+       def __(*args, **kwargs):
+           try:
+               func(*args, **kwargs)
+           except:
+               t, v, tb = sys.exc_info()
+               if with_traceback:
+                   message = traceback.format_exception(t, v, tb)
+               else:
+                   message = traceback.format_exception_only(t, v)
+               _mqas.twitter(id_obj, [message],
+                             {"type":t, "value":v, "traceback":tb})
+               if reraise:
+                   raise
+       return __
+   return _
+
+
 class Follower(type):
     """Metaclass for definition of follower instance methods.
 
@@ -595,7 +622,7 @@ def twitter(identifier, *args, **kwargs):
     RootTransporter.twitter(Identifier(identifier), args, kwargs)
 
 
-class TransporterReceiver(Object):
+class TransporterReceiver(object):
     def __init__(self, url):
         self.servers = {}
         self.my_url = url

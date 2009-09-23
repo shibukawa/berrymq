@@ -58,7 +58,7 @@
   <div class="section" id="module-berrymq">
 <h1>Python API<a class="headerlink" href="#module-berrymq" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="decorators">
-<span id="index-20"></span><h2>Decorators<a class="headerlink" href="#decorators" title="Permalink to this headline">¶</a></h2>
+<span id="index-10"></span><h2>Decorators<a class="headerlink" href="#decorators" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="berrymq.following">
 <tt class="descclassname">berrymq.</tt><tt class="descname">following</tt><big>(</big><em>identifier</em><span class="optional">[</span>, <em>guard_condition</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.following" title="Permalink to this definition">¶</a></dt>
@@ -161,9 +161,17 @@ The decorated function is called, automatically sends message.</p>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="berrymq.twitter_exception">
+<tt class="descclassname">berrymq.</tt><tt class="descname">twitter_exception</tt><big>(</big><big>)</big><a class="headerlink" href="#berrymq.twitter_exception" title="Permalink to this definition">¶</a></dt>
+<dd>This is a decorator function.
+If any exception raised in decorated function, send message.</dd></dl>
+
 </div>
 <div class="section" id="functions">
-<span id="index-21"></span><h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<span id="index-11"></span><h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="send-message">
+<h3>Send Message<a class="headerlink" href="#send-message" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="berrymq.twitter">
 <tt class="descclassname">berrymq.</tt><tt class="descname">twitter</tt><big>(</big><em>identifier</em><span class="optional">[</span>, <em>...</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.twitter" title="Permalink to this definition">¶</a></dt>
@@ -183,10 +191,76 @@ identifer. All receivers call back to this <a class="reference external" href="i
 </dd></dl>
 
 <dl class="function">
+<dt id="berrymq.send_message">
+<tt class="descclassname">berrymq.</tt><tt class="descname">send_message</tt><big>(</big><em>token</em>, <em>identifier</em><span class="optional">[</span>, <em>...</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.send_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send message to other node. This function supports type02, type03
+client/server style inter-process communication.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>token</em> (str) &#8211; return value of <a title="berrymq.connect_oneway" class="reference internal" href="#berrymq.connect_oneway"><tt class="xref docutils literal"><span class="pre">connect_oneway()</span></tt></a> or <a title="berrymq.connect_via_queue" class="reference internal" href="#berrymq.connect_via_queue"><tt class="xref docutils literal"><span class="pre">connect_via_queue()</span></tt></a></li>
+<li><em>identifier</em> (str) &#8211; see <a class="reference external" href="intro.html#identifier"><em>Identifier</em></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="receive-message">
+<h3>Receive Message<a class="headerlink" href="#receive-message" title="Permalink to this headline">¶</a></h3>
+<p>Normally, you don&#8217;t have to call receive functions.
+They are used in type03 inter-process communication context.</p>
+<dl class="function">
+<dt id="berrymq.get">
+<tt class="descclassname">berrymq.</tt><tt class="descname">get</tt><big>(</big><em>token</em><span class="optional">[</span>, <em>block</em><span class="optional">[</span>, <em>timeout</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="berrymq.get_nowait">
+<tt class="descclassname">berrymq.</tt><tt class="descname">get_nowait</tt><big>(</big><em>token</em><big>)</big><a class="headerlink" href="#berrymq.get_nowait" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="inter-process-settings">
+<h3>Inter-process settings<a class="headerlink" href="#inter-process-settings" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="berrymq.init_connection">
+<tt class="descclassname">berrymq.</tt><tt class="descname">init_connection</tt><big>(</big><span class="optional">[</span><em>host=&quot;localhost&quot;</em><span class="optional">[</span>, <em>port=0</em><span class="optional">]</span><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.init_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="berrymq.connect_interactively">
+<tt class="descclassname">berrymq.</tt><tt class="descname">connect_interactively</tt><big>(</big><em>url</em><span class="optional">[</span>, <em>ttl=1000</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.connect_interactively" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="berrymq.connect_oneway">
+<tt class="descclassname">berrymq.</tt><tt class="descname">connect_oneway</tt><big>(</big><em>url</em><span class="optional">[</span>, <em>ttl=1000</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.connect_oneway" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="berrymq.connect_via_queue">
+<tt class="descclassname">berrymq.</tt><tt class="descname">connect_via_queue</tt><big>(</big><em>url</em>, <em>identfier</em><span class="optional">[</span>, <em>ttl=1000</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.connect_via_queue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="berrymq.close_connection">
+<tt class="descclassname">berrymq.</tt><tt class="descname">close_connection</tt><big>(</big><span class="optional">[</span><em>url</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#berrymq.close_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="concurrency">
+<h3>Concurrency<a class="headerlink" href="#concurrency" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
 <dt id="berrymq.set_multiplicity">
 <tt class="descclassname">berrymq.</tt><tt class="descname">set_multiplicity</tt><big>(</big><em>number</em><big>)</big><a class="headerlink" href="#berrymq.set_multiplicity" title="Permalink to this definition">¶</a></dt>
 <dd>This function is set thread pool size.</dd></dl>
 
+</div>
 </div>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
@@ -292,7 +366,7 @@ are sent by berryMQ. User uses this object just as message receiver.</p>
 <p>If you pass <tt class="xref docutils literal"><span class="pre">True</span></tt> at <tt class="docutils literal"><span class="pre">shared</span></tt> flag,
 new object become a <strong>shared</strong> queue. If there are some objects which has
 same <a class="reference external" href="intro.html#identifier"><em>Identifier</em></a>, they share only one queue. If some object
-<a title="berrymq.Queue.get" class="reference internal" href="#berrymq.Queue.get"><tt class="xref docutils literal"><span class="pre">get()</span></tt></a> value, others can&#8217;t get that message any more.</p>
+<a title="berrymq.get" class="reference internal" href="#berrymq.get"><tt class="xref docutils literal"><span class="pre">get()</span></tt></a> value, others can&#8217;t get that message any more.</p>
 <p>In another case, new object become a <strong>standalone</strong> queue. If there are
 some objects which has same <a class="reference external" href="intro.html#identifier"><em>Identifier</em></a> and someone send
 message which matches that identifier, all queues will store a copy of
@@ -381,7 +455,13 @@ Its object is raised by <a title="berrymq.Queue.get" class="reference internal" 
             <ul>
 <li><a class="reference external" href="">Python API</a><ul>
 <li><a class="reference external" href="#decorators">Decorators</a></li>
-<li><a class="reference external" href="#functions">Functions</a></li>
+<li><a class="reference external" href="#functions">Functions</a><ul>
+<li><a class="reference external" href="#send-message">Send Message</a></li>
+<li><a class="reference external" href="#receive-message">Receive Message</a></li>
+<li><a class="reference external" href="#inter-process-settings">Inter-process settings</a></li>
+<li><a class="reference external" href="#concurrency">Concurrency</a></li>
+</ul>
+</li>
 <li><a class="reference external" href="#classes">Classes</a></li>
 </ul>
 </li>

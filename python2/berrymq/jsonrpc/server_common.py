@@ -30,6 +30,7 @@ class SimpleJSONRPCDispatcher(SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
             err = dict(type=str(extpe),
                        message=str(exv),
                        traceback=''.join(traceback.format_tb(extrc)))
+            print(''.join(traceback.format_tb(extrc)))
             response = dict(id=id, result=None, error=err)
         try:
             return json.dumps(response)

@@ -95,7 +95,7 @@ class ServerProxy:
             raise ResponseError("Invalid request id (is: %s, expected: %s)" \
                                 % (response["id"], self.__id))
         if response["error"] is not None:
-            raise Fault("JSON Error", response["error"])
+            raise Fault("JSON Error@%s" % self.__host, response["error"])
         return response["result"]
 
     def __repr__(self):

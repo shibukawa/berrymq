@@ -9,7 +9,7 @@ Following class implements JSON-RPC interface.
 
 .. class:: TransporterReceiver
 
-   .. method:: connect_interactively(url, ttl=1000)
+   .. method:: connect_interactively(url, ttl)
 
       Connect to other node equality. 
       This is :ref:`inter-process style01 <inter_process_style01>`.
@@ -23,7 +23,7 @@ Following class implements JSON-RPC interface.
       :return: token
       :rtype: str
 
-   .. method:: connect_oneway(ttl=1000)
+   .. method:: connect_oneway(ttl)
 
       Connect to other node. Target node won't call back to client.
       This is :ref:`inter-process style02 <inter_process_style02>`.
@@ -33,7 +33,7 @@ Following class implements JSON-RPC interface.
       :return: token
       :rtype: str
 
-   .. method:: connect_via_queue(url, identifier, ttl=1000)
+   .. method:: connect_via_queue(url, identifier, ttl)
 
       Connect to other node with queue. 
       This is :ref:`inter-process style03 <inter_process_style03>`.
@@ -60,16 +60,25 @@ Following class implements JSON-RPC interface.
       :param kwargs: message keyword args
       :type  kwargs: dict
 
-   .. method:: get(token, block=True, timeout=0):
+      :return: status code
+      :rtype: "ok" or "invalid token" or "timeout"
+
+   .. method:: get(token, block, timeout):
    
       Get message from queue. 
       This function is available if you connect by :meth:`connect_via_queue`.
 
       .. seealso:: :meth:`berrymq.Queue.get`
 
+      :return: message object or error code
+      :rtype:  {id, args, kwargs} or "invalid token" or "timeout"
+
    .. method:: get_nowait(token)
 
       .. seealso:: :meth:`berrymq.Queue.get_nowait`
+
+      :return: message object or error code
+      :rtype:  {id, args, kwargs} or "invalid token" or "timeout"
 
    .. method:: close(token)
 

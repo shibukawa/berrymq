@@ -33,12 +33,12 @@ def main():
         show_usage()
 
     if "--1st_node" in sys.argv:
-        import tests.test_berrymq_network_1st_node
-        tests.test_berrymq_network_1st_node.test(mqas)
+        import tests.test_interprocess
+        tests.test_interprocess.primary_node()
         sys.exit()
     if "--2nd_node" in sys.argv:
-        import tests.test_berrymq_network_2nd_node
-        tests.test_berrymq_network_2nd_node.test(berrymq)
+        import tests.test_interprocess
+        tests.test_interprocess.secondary_node()
         sys.exit()
 
     suite = unittest.TestSuite()

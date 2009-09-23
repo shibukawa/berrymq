@@ -9,7 +9,10 @@ from berrymq import (following,
                      show_network,
                      twitter)
 
-from berrymq_network import (network_init,
-                             network_connect,
-                             network_quit,
-                             network_mainloop)
+from connect import (init_connection,
+                     connect_interactively,
+                     connect_oneway,
+                     connect_via_queue,
+                     close_connection,
+                     send_message,
+                     get, get_nowait)

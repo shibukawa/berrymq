@@ -20,7 +20,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="berryMQ v0.1 documentation" href="index.html" />
-    <link rel="next" title="Thanks" href="thanks.html" />
+    <link rel="next" title="Features Chart" href="features.html" />
     <link rel="prev" title="Ruby API" href="rubyapi.html" />
         <link rel=stylesheet type="text/css" href="_static/berrymq.css">   
 
@@ -40,7 +40,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="thanks.html" title="Thanks"
+          <a href="features.html" title="Features Chart"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="rubyapi.html" title="Ruby API"
@@ -64,7 +64,7 @@ Following class implements JSON-RPC interface.</p>
 <em class="property">class </em><tt class="descclassname">berrymq.</tt><tt class="descname">TransporterReceiver</tt><a class="headerlink" href="#berrymq.TransporterReceiver" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="berrymq.TransporterReceiver.connect_interactively">
-<tt class="descname">connect_interactively</tt><big>(</big><em>url</em>, <em>ttl=1000</em><big>)</big><a class="headerlink" href="#berrymq.TransporterReceiver.connect_interactively" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">connect_interactively</tt><big>(</big><em>url</em>, <em>ttl</em><big>)</big><a class="headerlink" href="#berrymq.TransporterReceiver.connect_interactively" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to other node equality.
 This is <a class="reference external" href="intro.html#inter-process-style01"><em>inter-process style01</em></a>.</p>
 <p>Once you call this function, this node will callback to <tt class="docutils literal"><span class="pre">url</span></tt>.</p>
@@ -90,7 +90,7 @@ This is <a class="reference external" href="intro.html#inter-process-style01"><e
 
 <dl class="method">
 <dt id="berrymq.TransporterReceiver.connect_oneway">
-<tt class="descname">connect_oneway</tt><big>(</big><em>ttl=1000</em><big>)</big><a class="headerlink" href="#berrymq.TransporterReceiver.connect_oneway" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">connect_oneway</tt><big>(</big><em>ttl</em><big>)</big><a class="headerlink" href="#berrymq.TransporterReceiver.connect_oneway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to other node. Target node won&#8217;t call back to client.
 This is <a class="reference external" href="intro.html#inter-process-style02"><em>inter-process style02</em></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -109,7 +109,7 @@ This is <a class="reference external" href="intro.html#inter-process-style02"><e
 
 <dl class="method">
 <dt id="berrymq.TransporterReceiver.connect_via_queue">
-<tt class="descname">connect_via_queue</tt><big>(</big><em>url</em>, <em>identifier</em>, <em>ttl=1000</em><big>)</big><a class="headerlink" href="#berrymq.TransporterReceiver.connect_via_queue" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">connect_via_queue</tt><big>(</big><em>url</em>, <em>identifier</em>, <em>ttl</em><big>)</big><a class="headerlink" href="#berrymq.TransporterReceiver.connect_via_queue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to other node with queue.
 This is <a class="reference external" href="intro.html#inter-process-style03"><em>inter-process style03</em></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -141,12 +141,18 @@ This is <a class="reference external" href="intro.html#inter-process-style03"><e
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><em>token</em> (str) &#8211; return value of connection methods</li>
 <li><em>identifier</em> (str) &#8211; message identifier</li>
 <li><em>args</em> (list) &#8211; message args</li>
 <li><em>kwargs</em> (dict) &#8211; message keyword args</li>
 </ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">status code</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">&#8220;ok&#8221; or &#8220;invalid token&#8221; or &#8220;timeout&#8221;</p>
 </td>
 </tr>
 </tbody>
@@ -155,13 +161,23 @@ This is <a class="reference external" href="intro.html#inter-process-style03"><e
 
 <dl class="method">
 <dt>
-<tt class="descname">get(token, block=True, timeout=0):</tt></dt>
+<tt class="descname">get(token, block, timeout):</tt></dt>
 <dd><p>Get message from queue.
 This function is available if you connect by <a title="berrymq.TransporterReceiver.connect_via_queue" class="reference internal" href="#berrymq.TransporterReceiver.connect_via_queue"><tt class="xref docutils literal"><span class="pre">connect_via_queue()</span></tt></a>.</p>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a title="berrymq.Queue.get" class="reference external" href="pythonapi.html#berrymq.Queue.get"><tt class="xref docutils literal"><span class="pre">berrymq.Queue.get()</span></tt></a></p>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">message object or error code</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">{id, args, kwargs} or &#8220;invalid token&#8221; or &#8220;timeout&#8221;</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -171,12 +187,31 @@ This function is available if you connect by <a title="berrymq.TransporterReceiv
 <p class="first admonition-title">See also</p>
 <p class="last"><a title="berrymq.Queue.get_nowait" class="reference external" href="pythonapi.html#berrymq.Queue.get_nowait"><tt class="xref docutils literal"><span class="pre">berrymq.Queue.get_nowait()</span></tt></a></p>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">message object or error code</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">{id, args, kwargs} or &#8220;invalid token&#8221; or &#8220;timeout&#8221;</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="berrymq.TransporterReceiver.close">
 <tt class="descname">close</tt><big>(</big><em>token</em><big>)</big><a class="headerlink" href="#berrymq.TransporterReceiver.close" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>close session.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameter:</th><td class="field-body"><em>token</em> (str) &#8211; return value of connection methods</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
@@ -192,8 +227,8 @@ This function is available if you connect by <a title="berrymq.TransporterReceiv
             <p class="topless"><a href="rubyapi.html"
                                   title="previous chapter">Ruby API</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="thanks.html"
-                                  title="next chapter">Thanks</a></p>
+            <p class="topless"><a href="features.html"
+                                  title="next chapter">Features Chart</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/jsonapi.txt"
@@ -226,7 +261,7 @@ This function is available if you connect by <a title="berrymq.TransporterReceiv
           <a href="modindex.html" title="Global Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="thanks.html" title="Thanks"
+          <a href="features.html" title="Features Chart"
              >next</a> |</li>
         <li class="right" >
           <a href="rubyapi.html" title="Ruby API"

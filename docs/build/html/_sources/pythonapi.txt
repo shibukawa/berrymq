@@ -66,11 +66,20 @@ Decorators
    :param exit: Send message after calling function?(default: False)
    :type  exit: True or False
 
+
+.. function:: twitter_exception
+
+   This is a decorator function. 
+   If any exception raised in decorated function, send message.
+
 .. index::
    single: function; Python
 
 Functions
 =========
+
+Send Message
+------------
 
 .. function:: twitter(identifier[, ...])
 
@@ -87,10 +96,47 @@ Functions
 
       This is planning feature. It isn't implemented yet.
 
+.. function:: send_message(token, identifier[, ...])
+
+   Send message to other node. This function supports type02, type03 
+   client/server style inter-process communication.
+
+   :param token: return value of :func:`connect_oneway` or :func:`connect_via_queue`
+   :type  token: str
+   :param identifier: see :ref:`identifier`
+   :type  identifier: str
+
+Receive Message
+---------------
+
+Normally, you don't have to call receive functions. 
+They are used in type03 inter-process communication context.
+
+.. function:: get(token[, block[, timeout]])
+
+.. function:: get_nowait(token)
+
+Inter-process settings
+----------------------
+
+.. function:: init_connection([host="localhost"[, port=0]])
+
+.. function:: connect_interactively(url[, ttl=1000])
+
+.. function:: connect_oneway(url[, ttl=1000])
+
+.. function:: connect_via_queue(url, identfier[, ttl=1000])
+
+.. function:: close_connection([url])
+
+Concurrency
+-----------
+
 .. function:: set_multiplicity(number)
 
    This function is set thread pool size.
 
+.. 
 
 Classes
 =======
