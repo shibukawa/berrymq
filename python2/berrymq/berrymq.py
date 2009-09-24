@@ -495,6 +495,16 @@ class Follower(type):
         return instance
 
 
+def regist_method(identifier, method):
+    id_obj = Identifier(identifier)
+    RootTransporter.regist_follower(id_obj, _weakmethod_ref(method))
+
+
+def regist_function(identifier, function):
+    id_obj = Identifier(identifier)
+    RootTransporter.regist_follower(id_obj, _weakfunction_ref(function))
+
+
 class Message(object):
     def __init__(self, id_obj, args, kwargs, counter):
         self._id_obj = id_obj

@@ -1,4 +1,5 @@
 import time
+import uuid
 import berrymq
 import jsonrpc.client
 import jsonrpc.server
@@ -32,7 +33,7 @@ class Connection(object):
     """
     def __init__(self, ttl=None):
         self.last_access = time.time()
-        self.token = None
+        self.token = str(uuid.uuid1())
         self.ttl = ttl
         self.proxy = None
         self.url = None
@@ -79,7 +80,7 @@ class QueueConnection(Connection):
     """This class supports type03 server side connection"""
     def __init__(self, identifier, ttl):
         super(QueueConnection, self).__init__(ttl)
-        self.queue = Queue(identfier)
+        self.queue = berrymq.Queue(identifier)
 
     def receive_get_request(self, block, timeout):
         self.check_ttl()
@@ -116,10 +117,8 @@ class ExportedFunctions(object):
     def connect_oneway(self, ttl=1000):
         return ConnectionPoint.append(Connection(ttl))
 
-    def connect_via_queue(self, url, identifier, ttl=1000):
-        con = QueueConnection(url, identifier, ttl)
-        self.connections[con.token] = con
-        return con.token
+    def connect_via_queue(self, identifier, ttl=1000):
+        return ConnectionPoint.append(QueueConnection(identifier, ttl))
 
     def close_connection(self, token, url=None):
         return "ok"
@@ -128,19 +127,10 @@ class ExportedFunctions(object):
         return ConnectionPoint.receive_message(token, identifier, args, kwargs)
 
     def get(self, token, block, timeout):
-        connection = self.connections.get(token)
-        if not isinstance(connection, QueueConnection):
-            return "invalid token"
-        try:
-            connection.check_ttl()
-        except Timeout, e:
-            del self.connections[e.token]
-            return "timeout"
-        message = connection.queue.get(block, timeout)
-        return [message.id, message.args, message.kwargs]
+        return ConnectionPoint.receive_get(token, block, timeout)
 
     def get_nowait(self, token):
-        return self.get(token, False, 0)
+        return ConnectionPoint.receive_get(token, False, 0)
 
     def _twitter_to_other_process(self, id_obj, args, kwargs):
         for server in self.servers.itervalues():
@@ -176,6 +166,8 @@ class ConnectionPoint(object):
         @type  connection: a kind of Connection's instance
         @param client: set True if this node is client
         @type  client: bool
+        @return: token
+        @rtype:  str
         """
         if client:
             if cls._client_token:
@@ -221,6 +213,19 @@ class ConnectionPoint(object):
     def send_get_nowait(cls):
         if not self._client_token:
             raise NotConnectToServer()
+
+    @classmethod
+    def receive_get(cls, token, block, timeout):
+        connection = cls._connections.get(token)
+        if not isinstance(connection, QueueConnection):
+            return "invalid token"
+        try:
+            connection.check_ttl()
+        except Timeout, e:
+            del cls._connections[e.token]
+            return "timeout"
+        message = connection.queue.get(block, timeout)
+        return [message.id, message.args, message.kwargs]
 
     @classmethod
     def receive_message(cls, token, identifier, args, kwargs):

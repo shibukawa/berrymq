@@ -7,7 +7,10 @@ from berrymq import (following,
                      Follower,
                      set_multiplicity,
                      show_network,
-                     twitter)
+                     twitter,
+                     regist_method,
+                     regist_function)
+
 
 from connect import (init_connection,
                      connect_interactively,
