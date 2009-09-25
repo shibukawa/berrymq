@@ -72,6 +72,7 @@ class InteractiveConnection(Connection):
     @berrymq.following("*:*")
     def sender(self, message):
         self.check_ttl()
+        print "-"*40, message.id
         self.proxy.send_message(self.token, message.id, message.args, 
                                 message.kwargs)
 
@@ -117,7 +118,7 @@ class ExportedFunctions(object):
     def connect_oneway(self, ttl=1000):
         return ConnectionPoint.append(Connection(ttl))
 
-    def connect_via_queue(self, identifier, ttl=1000):
+    def connect_via_queue(self, identifier, ttl):
         return ConnectionPoint.append(QueueConnection(identifier, ttl))
 
     def close_connection(self, token, url=None):
@@ -245,7 +246,7 @@ class ConnectionPoint(object):
 # berryMQ API
 
 
-def init_connection(host="localhost", port=0):
+def init_connection(host=("localhost", 0)):
     ConnectionPoint.Init(host, port)
 
 

@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 import unittest
 
 rootdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,7 +47,7 @@ Use 2 nodes,  Primary(P) and Secondary(S).
 
 # Const
 
-CONTROL_SERVER_URL = ("localhost", 12345)
+CONTROL_SERVER_URL = ("localhost", 12345) # primary node
 PRIMARY_NODE_URL = ("localhost", 12346)
 SECONDARY_NODE_URL = ("localhost", 12347)
 
@@ -55,11 +56,11 @@ SECONDARY_NODE_URL = ("localhost", 12347)
 def _url(URL):
     return "http://%s:%s" % URL
 
-def check(expected, message_id):
-    if message_id == expected:
+def check(expected, actual):
+    if actual == expected:
         print "  ok: %s" % expected
     else:
-        print "  ng: expected=%s, acutal=%s" % (expected, message_id)
+        print "  ng: expected=%s, acutal=%s" % (expected, actual)
 
 def quit():
     print "quit"
@@ -71,13 +72,38 @@ def quit():
 # These functions is run at primary node and called from secondary one via RPC.
 
 token = None
+primary_node_server = None
 
 def style01_start():
     print "style01_start"
+    global token
+    global primary_node_server
+    
+    exported_functions = berrymq.connect.ExportedFunctions()
+    primary_node_server = berrymq.jsonrpc.server.SimpleJSONRPCServer(
+        PRIMARY_NODE_URL)
+    primary_node_server.register_instance(exported_functions)
+    primary_node_server.serve_forever(in_thread=True)
+
+    client = berrymq.jsonrpc.client.ServerProxy(_url(SECONDARY_NODE_URL))
+    token = client.connect_interactively(_url(PRIMARY_NODE_URL), 1000)
+    
+    @berrymq.following_function("*:*")
+    def transfer(message):
+        print "-"*40, message.id
+        client.send_message(token, message.id, message.args, message.kwargs)
+    berrymq.twitter("style01c:test01")
+    time.sleep(1)
     return True
 
 def style01_exit():
     print "style01_exit"
+    expected = ["style01s:test02"]
+    actual = [message.id for message in _primary_node_test_result]
+    check(expected, actual)
+    client = berrymq.jsonrpc.client.ServerProxy(_url(SECONDARY_NODE_URL))
+    print "  " + client.close_connection(token)
+    primary_node_server.shutdown()
     return True
 
 def style02_start():
@@ -86,7 +112,7 @@ def style02_start():
     client = berrymq.jsonrpc.client.ServerProxy(_url(SECONDARY_NODE_URL))
     token = client.connect_oneway(1000)
     print "  token = %s" % token
-    client.send_message(token, "style02:test02", [1,2,3], {"a":1, "b":2})
+    client.send_message(token, "style02c:test02", [1,2,3], {"a":1, "b":2})
     return True
 
 def style02_exit():
@@ -99,26 +125,28 @@ def style03_start():
     print "style03_start"
     global token
     client = berrymq.jsonrpc.client.ServerProxy(_url(SECONDARY_NODE_URL))
-    token = client.connect_via_queue("style03:*", 1000)
+    token = client.connect_via_queue("style03s:*", 1000)
     print "  token = %s" % token
-    client.send_message(token, "style03:test01", [3, 2, 1], {"a":1, "b":2})
+    client.send_message(token, "style03c:test01", [3, 2, 1], {"a":1, "b":2})
     return True
 
 def style03_check():
     print "style03_check"
     client = berrymq.jsonrpc.client.ServerProxy(_url(SECONDARY_NODE_URL))
-    check("style03:test02", client.get(token, True, 10000)[0])
+    check("style03s:test02", client.get(token, True, 10000)[0])
     return True
 
 def style03_exit():
     print "style03_exit"
     client = berrymq.jsonrpc.client.ServerProxy(_url(SECONDARY_NODE_URL))
-    check("style03:test03", client.get_nowait(token)[0])
+    check("style03s:test03", client.get_nowait(token)[0])
     print "  " + client.close_connection(token)
     return True
 
 
 # Main Routines
+
+_primary_node_test_result = []
 
 def primary_node():
     global jsonserver
@@ -132,15 +160,22 @@ def primary_node():
     jsonserver.register_function(style03_exit)
     jsonserver.register_function(quit)
     print "start primary server. waiting secondary node."
+
+    @berrymq.following_function("style03s:*")
+    def receive_messages(message):
+        _primary_node_test_result.append(message)
+    
     jsonserver.serve_forever()
 
 
 def secondary_node():
     expected_at_secondary = [
-        ["style02:test02", [1,2,3], {"a":1, "b":2}],
-        ["style03:test01", [3,2,1], {"a":1, "b":2}],
-        ["style03:test02", (), {}],
-        ["style03:test03", (), {}],
+        ["style02c:test02", [1,2,3], {"a":1, "b":2}],
+        ["style03c:test01", [3,2,1], {"a":1, "b":2}],
+        ["style03s:test02", (), {}],
+        ["style03s:test03", (), {}],
+		["style01c:test01", [], {}],
+		["style01s:test02", (), {}]
     ]
     test_results = []
     @berrymq.following_function("*:*")
@@ -166,11 +201,12 @@ def secondary_node():
     controller.style02_start()
     controller.style02_exit()
     controller.style03_start()
-    berrymq.twitter("style03:test02")
+    berrymq.twitter("style03s:test02")
     controller.style03_check()
-    berrymq.twitter("style03:test03")
+    berrymq.twitter("style03s:test03")
     controller.style03_exit()
     controller.style01_start()
+    berrymq.twitter("style01s:test02")
     controller.style01_exit()
     controller.quit()
     secondary_node_server.shutdown()
@@ -190,8 +226,13 @@ def usage():
     is seconary.
 
 usage:
-    python test_interprocess_low.py -primary   : run this first
-    python test_interprocess_low.py -secondary : run after primary process
+    python test_interprocess_low.py -primary   [option]
+         : run this first
+    python test_interprocess_low.py -secondary [option]
+         : run after primary process
+
+option:
+    -growl : transfer messages to growl(for debug)
 """
 
 

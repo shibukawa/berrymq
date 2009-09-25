@@ -41,10 +41,37 @@ Identifier
 Push API
 ========
 
+.. index::
+   class: berrymq.Follower
+
 Use with method receiver
 ------------------------
 
-writing ...
+Any object can use as message receiver. In python, this mechanism is realized by mata class feature. Hear is a Python 3.x sample. It is a most common way to use berryMQ.
+
+.. code-block:: python
+
+  class Logger(metaclass=Follower):
+      @following("*:log")
+      def receive_log(self, message):
+         ...
+
+This is sample for Ruby.
+
+.. code-block:: ruby
+   # Ruby
+   class Logger
+     include BerryMQ::Follower
+     
+     following("*:log")
+     def receive_log(message)
+        ...
+     end
+   end
+
+.. seealso::
+
+   You can see detail information and sample codes for Python 2.x at :class:`Follower`.
 
 Use with function receiver
 --------------------------
@@ -88,9 +115,24 @@ If you call ``do_something()`` function in above sample, this function send a me
 Pull API
 ========
 
-writing..
+Pull API feature is supported by :class:`berrymq.Queue`. 
+Creating new queue is easy like this:
 
-see :class:`berrymq.Queue`.
+.. code-block:: python
+
+   queue = berrymq.Queue("task:*")
+
+After creating queue, berryMQ will store all massages which match first argument pattern to queue. You can pull that message when you like.
+
+.. code-block:: python
+
+   message = queue.get()
+
+There are two methods to get message. :meth:`berryMQ.Queue.get` and :meth:`berryMQ.Queue.get_nowait`. If the queue was empty, :meth:`berryMQ.Queue.get` will block until any message will reach.
+
+.. note::
+
+   ``get(block=False)`` and ``get_nowait()`` are same. 
 
 .. index::
    single: Inter-process communication

@@ -152,9 +152,9 @@ Classes
       # Python 2.4, 2.5, 2.6
       class Logger(object):
       	  __metaclass__ = Follower
-      	 @following("*:log")
-	 def receive_log(self, message):
-	     ...
+      	  @following("*:log")
+          def receive_log(self, message):
+	          ...
 	  
    In python 3.0 -:
 
@@ -162,9 +162,9 @@ Classes
 
       # Python 3.0, 3.1
       class Logger(metaclass=Follower):
-      	 @following("*:log")
-	 def receive_log(self, message):
-	     ...
+          @following("*:log")
+          def receive_log(self, message):
+             ...
 
    If you use Ruby, This class provide special decorators. :func:`following` 
    and :func:`auto_twitter`. Use like this:
