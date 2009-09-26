@@ -301,3 +301,35 @@ Classes
 
    This is a same class of :exc:`queue.Empty`. 
    Its object is raised by :meth:`Queue.get`
+
+Adapters
+========
+
+.. module:: berrymq.adapter
+   :synopsis: berryMQ adapter modules
+
+
+.. module:: berrymq.adapter.growl
+   :synopsis: berryMQ adapter for Growl
+
+Growl Adapter
+-------------
+
+.. class:: GrowlAdapter
+
+   This is a adapter class for Growl.
+   You can forward message to Growl.
+   This class uses UDP protocol of Growl.
+
+   .. note::
+
+      Future release will support Growl Notification Transfer Protocol(GNTP).
+      It supports call back mechanism.
+
+   .. method:: __init__(identifier)
+
+      
+   .. method:: format(message)
+
+      This is template method fou formatting message.
+      Override this method. This method should return string.

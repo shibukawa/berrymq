@@ -13,6 +13,8 @@ import berrymq
 import berrymq.connect
 import berrymq.jsonrpc.server
 import berrymq.jsonrpc.client
+import berrymq.adapter.growl
+
 
 """
 Test Sequence
@@ -246,35 +248,9 @@ option:
     -growl : transfer messages to growl(for debug)
 """
 
-
-class GrowlListener(object):
-    def __init__(self, id_filter, application="berryMQ"):
-        from socket import AF_INET, SOCK_DGRAM, socket
-        import berrymq.growl.netgrowl as netgrowl
-        berrymq.regist_method(id_filter, self.listener)
-
-        self.addr = ("localhost", netgrowl.GROWL_UDP_PORT)
-        self.socket = socket(AF_INET,SOCK_DGRAM)
-        self.application=application
-
-        packet = netgrowl.GrowlRegistrationPacket(application)
-        packet.addNotification()
-        self.socket.sendto(packet.payload(), self.addr)
-
-    def listener(self, message):
-        from berrymq.growl.netgrowl import GrowlNotificationPacket
-        argstr = ", ".join([str(arg) for arg in message.args])
-        kwargstr = ", ".join(["%s:%s" % (str(key), str(value))
-                             for key, value in sorted(message.kwargs.items())])
-        desc = "[%s], {%s}" % (argstr, kwargstr)
-        packet = GrowlNotificationPacket(self.application, title=message.id, 
-                                         description=desc)
-        self.socket.sendto(packet.payload(), self.addr)
-
-  
 if __name__ == "__main__":
     if "-growl" in sys.argv:
-        listner = GrowlListener("*:*")
+        listner = berrymq.adapter.growl.GrowlAdapter("*:*")
     if "-primary" in sys.argv:
         primary_node()
     elif "-secondary" in sys.argv:

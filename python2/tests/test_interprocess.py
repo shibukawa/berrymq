@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""test program for interprocess communication(JSON-RPC layer)
+"""
 
 import os
 import sys
@@ -11,6 +13,8 @@ import berrymq
 import berrymq.connect
 import berrymq.jsonrpc.server
 import berrymq.jsonrpc.client
+import berrymq.adapter.growl
+
 
 """
 Test Sequence
@@ -72,68 +76,95 @@ def quit():
 # These functions is run at primary node and called from secondary one via RPC.
 
 token = None
-primary_node_server = None
 
-def style01_start():
-    print "style01_start"
-    berrymq.init_connection(PRIMARY_NODE_URL)
-    berrymq.connect_interactively(SECONDARY_NODE_URL)
-    berrymq.twitter("style01c:test01")
-    time.sleep(1)
-    return True
 
-def style01_exit():
-    print "style01_exit"
-    expected = ["style01s:test02"]
-    actual = [message.id for message in _primary_node_test_result]
-    check(expected, actual)
-    berrymq.close_connection(SECONDARY_NODE_URL)
-    berrymq.close_connection()
-    return True
+class PrimaryNodeTester(object):
+    def client(self):
+        return berrymq.jsonrpc.client.ServerProxy(_url(SECONDARY_NODE_URL))
 
-def style02_start():
-    print "style02_start"
-    berrymq.connect_oneway(SECONDARY_NODE_URL)
-    berrymq.send_message("style02c:test02", [1,2,3], {"a":1, "b":2})
-    return True
 
-def style02_exit():
-    print "style02_exit"
-    berrymq.close_connection(SECONDARY_NODE_URL)
-    return True
+class Style01Test(PrimaryNodeTester):
+    def __init__(self):
+        self.received_messages = []
 
-def style03_start():
-    print "style03_start"
-    berrymq.connect_via_queue(SECONDARY_NODE_URL)
-    berrymq.send_message("style03c:test01", [3, 2, 1], {"a":1, "b":2})
-    return True
+    def message_receiver(self, message):
+        self.received_messages.append(message.id)
 
-def style03_check():
-    print "style03_check"
-    check("style03s:test02", berrymq.get().id)
-    return True
+    def start(self):
+        exported_functions = berrymq.connect.ExportedFunctions()
+        self.server = berrymq.jsonrpc.server.SimpleJSONRPCServer(
+            PRIMARY_NODE_URL)
+        self.server.register_instance(exported_functions)
+        self.server.serve_forever(in_thread=True)
 
-def style03_exit():
-    print "style03_exit"
-    check("style03s:test03", berrymq.get_nowait().id)
-    berrymq.close_connection(SECONDARY_NODE_URL)
-    return True
+        berrymq.connect.ConnectionPoint.regist_exchanger()
+        berrymq.regist_method("*:*", self.message_receiver)
+
+        self.token = self.client().connect_interactively(
+            _url(PRIMARY_NODE_URL), 1000)
+        berrymq.connect.ConnectionPoint._allow_token(self.token)
+        print "  token =", self.token
+
+        self.client().send_message(self.token, "style01c:test01", [], {})
+        time.sleep(1)
+        return True
+
+    def exit(self):
+        expected = ["style01s:test02"]
+        check(expected, self.received_messages)
+        print "  close_connection =", self.client().close_connection(self.token)
+        self.server.shutdown()
+        self.connection = None
+        berrymq.connect.ConnectionPoint.clear_exchanger()
+        return True
+
+class Style02Test(PrimaryNodeTester):
+    def start(self):
+        client = self.client()
+        self.token = client.connect_oneway(1000)
+        print "  token = %s" % self.token
+        client.send_message(self.token, "style02c:test02", 
+                            [1,2,3], {"a":1, "b":2})
+        return True
+
+    def exit(self):
+        print "  " + self.client().close_connection(self.token)
+        return True
+
+
+class Style03Test(PrimaryNodeTester):
+    def start(self):
+        client = self.client()
+        self.token = client.connect_via_queue("style03s:*", 1000)
+        print "  token = %s" % self.token
+        client.send_message(self.token, "style03c:test01", 
+                            [3, 2, 1], {"a":1, "b":2})
+        return True
+
+    def check(self):
+        check("style03s:test02", self.client().get(self.token, True, 10000)[0])
+        return True
+
+    def exit(self):
+        client = self.client()
+        check("style03s:test03", client.get_nowait(self.token)[0])
+        print "  close_connection:", client.close_connection(self.token)
+        return True
+
+
+class TestSuite(object):
+    def __init__(self):
+        self.style01 = Style01Test()
+        self.style02 = Style02Test()
+        self.style03 = Style03Test()
 
 
 # Main Routines
 
-_primary_node_test_result = []
-
 def primary_node():
     global jsonserver
     jsonserver = berrymq.jsonrpc.server.SimpleJSONRPCServer(CONTROL_SERVER_URL)
-    jsonserver.register_function(style01_start)
-    jsonserver.register_function(style01_exit)
-    jsonserver.register_function(style02_start)
-    jsonserver.register_function(style02_exit)
-    jsonserver.register_function(style03_start)
-    jsonserver.register_function(style03_check)
-    jsonserver.register_function(style03_exit)
+    jsonserver.register_instance(TestSuite(), allow_dotted_names=True)
     jsonserver.register_function(quit)
     print "start primary server. waiting secondary node."
 
@@ -150,8 +181,8 @@ def secondary_node():
         ["style03c:test01", [3,2,1], {"a":1, "b":2}],
         ["style03s:test02", (), {}],
         ["style03s:test03", (), {}],
-		["style01c:test01", [], {}],
-		["style01s:test02", (), {}]
+        ["style01c:test01", [], {}],
+        ["style01s:test02", (), {}],
     ]
     test_results = []
     @berrymq.following_function("*:*")
@@ -168,22 +199,30 @@ def secondary_node():
                              str([message.id, message.args, message.kwargs]), 
                              result])
     
-    berrymq.init_connection(SECONDARY_NODE_URL)
-
+    exported_functions = berrymq.connect.ExportedFunctions()
+    secondary_node_server = berrymq.jsonrpc.server.SimpleJSONRPCServer(
+        SECONDARY_NODE_URL)
+    secondary_node_server.register_instance(exported_functions)
+    secondary_node_server.serve_forever(in_thread=True)
     controller = berrymq.jsonrpc.client.ServerProxy(_url(CONTROL_SERVER_URL))
-    controller.style02_start()
-    controller.style02_exit()
-    controller.style03_start()
-    berrymq.twitter("style03s:test02")
-    controller.style03_check()
-    berrymq.twitter("style03s:test03")
-    controller.style03_exit()
-    controller.style01_start()
-    berrymq.twitter("style01s:test02")
-    controller.style01_exit()
-    controller.quit()
+    controller.style02.start()
+    controller.style02.exit()
 
-    berrymq.close_connection()
+    controller.style03.start()
+    berrymq.twitter("style03s:test02")
+    controller.style03.check()
+    berrymq.twitter("style03s:test03")
+    controller.style03.exit()
+
+    berrymq.connect.ConnectionPoint.regist_exchanger()
+    controller.style01.start()
+    berrymq.twitter("style01s:test02")
+    time.sleep(1)
+    berrymq.connect.ConnectionPoint.clear_exchanger()
+
+    controller.style01.exit()
+    controller.quit()
+    secondary_node_server.shutdown()
 
     for expected, actual, result in test_results:
         if result == "ok":
@@ -209,35 +248,9 @@ option:
     -growl : transfer messages to growl(for debug)
 """
 
-
-class GrowlListener(object):
-    def __init__(self, id_filter, application="berryMQ"):
-        from socket import AF_INET, SOCK_DGRAM, socket
-        import berrymq.growl.netgrowl as netgrowl
-        berrymq.regist_method(id_filter, self.listener)
-
-        self.addr = ("localhost", netgrowl.GROWL_UDP_PORT)
-        self.socket = socket(AF_INET,SOCK_DGRAM)
-        self.application=application
-
-        packet = netgrowl.GrowlRegistrationPacket(application)
-        packet.addNotification()
-        self.socket.sendto(packet.payload(), self.addr)
-
-    def listener(self, message):
-        from berrymq.growl.netgrowl import GrowlNotificationPacket
-        argstr = ", ".join([str(arg) for arg in message.args])
-        kwargstr = ", ".join(["%s:%s" % (str(key), str(value))
-                             for key, value in sorted(message.kwargs.items())])
-        desc = "[%s], {%s}" % (argstr, kwargstr)
-        packet = GrowlNotificationPacket(self.application, title=message.id, 
-                                         description=desc)
-        self.socket.sendto(packet.payload(), self.addr)
-
-  
 if __name__ == "__main__":
     if "-growl" in sys.argv:
-        listner = GrowlListener("*:*")
+        listner = berrymq.adapter.growl.GrowlAdapter("*:*")
     if "-primary" in sys.argv:
         primary_node()
     elif "-secondary" in sys.argv:
