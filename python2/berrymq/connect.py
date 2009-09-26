@@ -63,6 +63,7 @@ class InteractiveConnection(Connection):
     def __init__(self, url, ttl):
         super(InteractiveConnection, self).__init__(ttl)
         self.proxy = jsonrpc.client.ServerProxy(url)
+        self.url = url
 
     def connnect(self, url):
         """This method is called at client side."""
@@ -70,9 +71,9 @@ class InteractiveConnection(Connection):
         return self.token
 
     @berrymq.following("*:*")
-    def sender(self, message):
+    def forward_to_outer_node(self, message):
+        print "forward to outernode:", message.id, self.url
         self.check_ttl()
-        print "-"*40, message.id
         self.proxy.send_message(self.token, message.id, message.args, 
                                 message.kwargs)
 
@@ -269,6 +270,7 @@ def connect_via_queue(url, identfier, ttl=1000):
 
 
 def send_message(identifier, *args, **kwargs):
+    print "-"*40, message.id
     ConnectionPoint.send_message(identifier, args, kwargs)
 
 

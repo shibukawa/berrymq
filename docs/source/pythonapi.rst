@@ -136,7 +136,14 @@ Concurrency
 
    This function is set thread pool size.
 
-.. 
+Support Functions
+-----------------
+
+.. function:: regist_function(identifier, function)
+
+.. function:: regist_method(identifier, method)
+
+   These functions is used for changing identifier dynamically.
 
 Classes
 =======
