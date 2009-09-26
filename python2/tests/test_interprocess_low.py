@@ -89,36 +89,35 @@ class Style01Test(PrimaryNodeTester):
         self.received_messages.append(message.id)
 
     def start(self):
-        print "style01_start"
-        berrymq.regist_method("*:*", self.message_receiver)
-        self.connection = berrymq.connect.InteractiveConnection(
-            _url(SECONDARY_NODE_URL), 1000)
-    
         exported_functions = berrymq.connect.ExportedFunctions()
         self.server = berrymq.jsonrpc.server.SimpleJSONRPCServer(
             PRIMARY_NODE_URL)
         self.server.register_instance(exported_functions)
         self.server.serve_forever(in_thread=True)
-        
+
+        berrymq.connect.ConnectionPoint.regist_exchanger()
+        berrymq.regist_method("*:*", self.message_receiver)
+
         self.token = self.client().connect_interactively(
             _url(PRIMARY_NODE_URL), 1000)
+        berrymq.connect.ConnectionPoint._allow_token(self.token)
+        print "  token =", self.token
 
-        berrymq.twitter("style01c:test01")
+        self.client().send_message(self.token, "style01c:test01", [], {})
         time.sleep(1)
         return True
 
     def exit(self):
-        print "style01_exit"
         expected = ["style01s:test02"]
         check(expected, self.received_messages)
-        print "  " + self.client().close_connection(self.token)
+        print "  close_connection =", self.client().close_connection(self.token)
         self.server.shutdown()
         self.connection = None
+        berrymq.connect.ConnectionPoint.clear_exchanger()
         return True
 
 class Style02Test(PrimaryNodeTester):
     def start(self):
-        print "style02_start"
         client = self.client()
         self.token = client.connect_oneway(1000)
         print "  token = %s" % self.token
@@ -127,14 +126,12 @@ class Style02Test(PrimaryNodeTester):
         return True
 
     def exit(self):
-        print "style02_exit"
         print "  " + self.client().close_connection(self.token)
         return True
 
 
 class Style03Test(PrimaryNodeTester):
     def start(self):
-        print "style03_start"
         client = self.client()
         self.token = client.connect_via_queue("style03s:*", 1000)
         print "  token = %s" % self.token
@@ -143,15 +140,13 @@ class Style03Test(PrimaryNodeTester):
         return True
 
     def check(self):
-        print "style03_check"
         check("style03s:test02", self.client().get(self.token, True, 10000)[0])
         return True
 
     def exit(self):
-        print "style03_exit"
         client = self.client()
         check("style03s:test03", client.get_nowait(self.token)[0])
-        print "  " + client.close_connection(self.token)
+        print "  close_connection:", client.close_connection(self.token)
         return True
 
 
@@ -184,8 +179,8 @@ def secondary_node():
         ["style03c:test01", [3,2,1], {"a":1, "b":2}],
         ["style03s:test02", (), {}],
         ["style03s:test03", (), {}],
-        ["style01c:test01", (), {}],
-        ["style01s:test02", (), {}]
+        ["style01c:test01", [], {}],
+        ["style01s:test02", (), {}],
     ]
     test_results = []
     @berrymq.following_function("*:*")
@@ -210,13 +205,19 @@ def secondary_node():
     controller = berrymq.jsonrpc.client.ServerProxy(_url(CONTROL_SERVER_URL))
     controller.style02.start()
     controller.style02.exit()
+
     controller.style03.start()
     berrymq.twitter("style03s:test02")
     controller.style03.check()
     berrymq.twitter("style03s:test03")
     controller.style03.exit()
+
+    berrymq.connect.ConnectionPoint.regist_exchanger()
     controller.style01.start()
     berrymq.twitter("style01s:test02")
+    time.sleep(1)
+    berrymq.connect.ConnectionPoint.clear_exchanger()
+
     controller.style01.exit()
     controller.quit()
     secondary_node_server.shutdown()

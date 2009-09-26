@@ -6,7 +6,6 @@ from berrymq import (following,
                      cond,
                      Follower,
                      set_multiplicity,
-                     show_network,
                      twitter,
                      regist_method,
                      regist_function)

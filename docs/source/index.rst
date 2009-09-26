@@ -24,6 +24,7 @@ Documentation
    intro
    pythonapi
    rubyapi
+   messages
    jsonapi
    features
    thanks

@@ -59,7 +59,6 @@ class InteractiveConnection(Connection):
     
     This object is used both client and server sides.
     """
-    __metaclass__ = berrymq.Follower
     def __init__(self, url, ttl):
         super(InteractiveConnection, self).__init__(ttl)
         self.proxy = jsonrpc.client.ServerProxy(url)
@@ -70,12 +69,9 @@ class InteractiveConnection(Connection):
         self.token = self.proxy.connect_interactively(url, self.ttl)
         return self.token
 
-    @berrymq.following("*:*")
-    def forward_to_outer_node(self, message):
-        print "forward to outernode:", message.id, self.url
+    def forward_message(self, identifier, args, kwargs):
         self.check_ttl()
-        self.proxy.send_message(self.token, message.id, message.args, 
-                                message.kwargs)
+        self.proxy.send_message(self.token, identifier, args, kwargs)
 
 
 class QueueConnection(Connection):
@@ -155,7 +151,15 @@ class ConnectionPoint(object):
         cls._server = jsonrpc.server.SimpleJSONRPCServer((host, port))
         cls._server.register_instance(ExportedFunctions())
         cls._server.serve_forever(in_thread=True)
+        cls.regist_exchanger()
+
+    @classmethod
+    def regist_exchanger(cls):
         berrymq.RootTransporter._connections = cls
+
+    @classmethod
+    def clear_exchanger(cls):
+        berrymq.RootTransporter._connections = None
 
     @classmethod
     def append(cls, connection, client=False):
@@ -181,6 +185,11 @@ class ConnectionPoint(object):
         return connection.token
 
     @classmethod
+    def _allow_token(cls, token):
+        """test method"""
+        cls._connections[token] = "test"
+
+    @classmethod
     def remove_connection(cls, url):
         token = cls._url_to_token.get(url)
         if token:
@@ -193,18 +202,19 @@ class ConnectionPoint(object):
         cls._server = None
         cls._connections = {}
         cls._url_to_token = {}
-        berrymq.RootTransporter._connections = None
+        cls.clear_exchanger()
 
     @classmethod
-    def send_message(cls, identifier, args, kwargs):
-        if not self._client_token:
-            raise NotConnectToServer()
-        connection = self._connections[self._client_token]
-
-    @classmethod
-    def forward_message(cls, identifier, args, kwargs):
-        """Forward message to style01 connection clients/server"""
-        pass
+    def forward_message(cls, identifier, args, kwargs, except_token=None):
+        """Forward message to style01 connection clients/server
+        @todo: ttl check
+        """
+        for token, connection in cls._connections.items():
+            if not isinstance(connection, InteractiveConnection):
+                continue
+            if token == except_token:
+                continue
+            connection.forward_message(identifier, args, kwargs)
 
     @classmethod
     def send_get(cls, block, timeout):
@@ -234,13 +244,15 @@ class ConnectionPoint(object):
         connection = cls._connections.get(token)
         if connection is None:
             return "invalid token"
-        try:
-            connection.check_ttl()
-        except Timeout, e:
-            del self.connections[e.token]
-            return "timeout"
+        elif isinstance(connection, Connection):
+            try:
+                connection.check_ttl()
+            except Timeout, e:
+                del self.connections[e.token]
+                return "timeout"
         id_obj = berrymq.Identifier(identifier)
         berrymq.RootTransporter.twitter_local(id_obj, args, kwargs)
+        cls.forward_message(identifier, args, kwargs, token)
         return "ok"
 
 
@@ -248,7 +260,7 @@ class ConnectionPoint(object):
 
 
 def init_connection(host=("localhost", 0)):
-    ConnectionPoint.Init(host, port)
+    ConnectionPoint.init(host, port)
 
 
 def connect_interactively(url, ttl=1000):

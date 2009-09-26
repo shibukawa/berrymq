@@ -236,8 +236,9 @@ class RootTransporter(object):
     @classmethod
     def twitter(cls, id_obj, args, kwargs):
         cls.twitter_local(id_obj, args, kwargs)
+        id_str = id_obj.id_str()
         if cls._connections:
-            cls._connections.forward_message(id_obj, args, kwargs)
+            cls._connections.forward_message(id_str, args, kwargs)
 
     @classmethod
     def twitter_local(cls, id_obj, args, kwargs):
@@ -564,102 +565,8 @@ def set_multiplicity(number):
         ThreadPool.clear_thread_pool()
 
 
-def show_followers():
-    methods = []
-    for id_obj, function_wrapper in RootTransporter.get_valid_followers():
-        for action in id_obj.action:
-            methods.append("%s:%s" % (id_obj.name, action))
-    return sorted(set(methods))
-
-
-def show_network():
-    network = {}
-    nodes = []
-    edges = []
-    classobjs = set()
-
-    nodetype = {"class":{"shape":"box3d", "bgcolor":"#C1E4FF",
-                         "pencolor":"#358ACC"},
-                "joint":{"shape":"none"}}
-
-    for name, action, method in RootTransporter.get_valid_expositions():
-        key = (name, action)
-        net = network.setdefault(key, {"follower":[], "exposition":[]})
-        if isinstance(method, types.MethodType):
-            classobjs.add(method.__self__.__class__)
-            net["exposition"].append(id(method.__self__.__class__))
-        else:
-            net["exposition"].append(None)
-
-    for name, action, method in RootTransporter.get_valid_followers():
-        key = (name, action)
-        net = network.setdefault(key, {"follower":[], "exposition":[]})
-        if isinstance(method, types.MethodType):
-            classobjs.add(method.__self__.__class__)
-            net["follower"].append(id(method.__self__.__class__))
-        else:
-            net["follower"].append(None)
-
-    for classobj in classobjs:
-        nodes.append(["class", id(classobj), classobj.__name__])
-
-    for key in network:
-        followers = network[key]["follower"]
-        expositions = network[key]["exposition"]
-        if len(followers) == 1 and len(expositions) == 1:
-            edges.append([expositions[0], followers[0],
-                          {"label": "%s:%s"%key}])
-        else:
-            nodes.append(["joint", id(classobj), "%s:%s"%key])
-            for exposition in expositions:
-                edges.append([exposition, id(classobj),{"label":""}])
-            for follower in followers:
-                edges.append([id(classobj), follower,{"label":""}])
-    result = ["digraph {"]
-
-    for typename, objid, label in nodes:
-        params = ['label="%s"' % label]
-        params += ['%s="%s"' % item for item in nodetype[typename].items()]
-        result.append("  %s [%s];" % (objid, ", ".join(params)))
-    for start, end, params in edges:
-        param_str = ['%s="%s"' % item for item in params.items()]
-        result.append("  %s -> %s [%s];" % (start, end, ", ".join(param_str)))
-    result.append("}")
-    return "\n".join(result)
-
-
 def twitter(identifier, *args, **kwargs):
     RootTransporter.twitter(Identifier(identifier), args, kwargs)
-
-
-class TransporterReceiver(object):
-    def __init__(self, url):
-        self.servers = {}
-        self.my_url = url
-
-    def _add_connection(self, url):
-        proxy = xmlrpclib.ServerProxy(url)
-        self.servers[url] = proxy
-        proxy.connect(self.my_url)
-
-    def connect(self, url):
-        self.servers[url] = xmlrpclib.ServerProxy(url)
-        return True
-
-    def quit(self):
-        global _stop_server
-        _stop_server = True
-        return True
-
-    def send_twitter(self, id, args, kwargs):
-        print "twitter from other: %s args=%s, kwargs=%s" % (id, args, kwargs)
-        RootTransporter.twitter_local(Identifier(id), args, kwargs)
-        return True
-
-    def _twitter_to_other_process(self, id_obj, args, kwargs):
-        for server in self.servers.itervalues():
-            server.send_twitter(id_obj.id_str(), args, kwargs)
-        return True
 
 
 class _PriorityQueue(queue.Queue):
