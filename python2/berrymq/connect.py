@@ -31,17 +31,18 @@ class Connection(object):
     
     This object is used only client side.
     """
-    def __init__(self, ttl=None):
+    def __init__(self, ttl=None, client=False):
         self.last_access = time.time()
         self.token = str(uuid.uuid1())
         self.ttl = ttl
         self.proxy = None
         self.url = None
+        self.client = client
 
     def connect(self, url):
         """This method is called at client side."""
         self.url = url
-        self.proxy = jsonrpc.client.ServerProxy(url)
+        self.proxy = jsonrpc.client.ServerProxy("http://%s:%d" % url)
         self.token = self.proxy.connect_oneway(self.ttl)
         return self.token
 
@@ -53,31 +54,46 @@ class Connection(object):
             raise Timeout(self.token)
         self.last_access = now
 
+    def send_message(self, identifier, args, kwargs):
+        if self.proxy is not None and self.client:
+            self.proxy.send_message(self.token, identifier, args, kwargs)
+
+    def forward_message(self, identifier, args, kwargs):
+        pass
+
 
 class InteractiveConnection(Connection):
     """This class supports type01 connection.
     
     This object is used both client and server sides.
     """
-    def __init__(self, url, ttl):
-        super(InteractiveConnection, self).__init__(ttl)
-        self.proxy = jsonrpc.client.ServerProxy(url)
-        self.url = url
+    def __init__(self, ttl, client=False):
+        super(InteractiveConnection, self).__init__(ttl, client)
+        self.proxy = None
+        self.url = None
 
-    def connnect(self, url):
+    def connect(self, url):
         """This method is called at client side."""
-        self.token = self.proxy.connect_interactively(url, self.ttl)
+        urlstr = "http://%s:%d" % url
+        self.proxy = jsonrpc.client.ServerProxy(urlstr)
+        self.token = self.proxy.connect_interactively(urlstr, self.ttl)
+        self.url = url
         return self.token
 
     def forward_message(self, identifier, args, kwargs):
+        print "InteractiveConnection:", identifier
         self.check_ttl()
-        self.proxy.send_message(self.token, identifier, args, kwargs)
+        if self.proxy is not None:
+            self.proxy.send_message(self.token, identifier, args, kwargs)
+
+    def send_message(self, identifier, args, kwargs):
+        pass
 
 
 class QueueConnection(Connection):
     """This class supports type03 server side connection"""
     def __init__(self, identifier, ttl):
-        super(QueueConnection, self).__init__(ttl)
+        super(QueueConnection, self).__init__(ttl, client=False)
         self.queue = berrymq.Queue(identifier)
 
     def receive_get_request(self, block, timeout):
@@ -88,16 +104,20 @@ class QueueConnection(Connection):
         self.check_ttl()
         return self.queue.get_nowait()
 
+    def send_message(self, identifier, args, kwargs):
+        pass
+
 
 class QueueClientConnection(Connection):
     """This class supports type03 client side connection"""
     def __init__(self, ttl):
-        super(QueueConnection, self).__init__(ttl)
+        super(QueueClientConnection, self).__init__(ttl, client=True)
 
     def connect(self, url, identifier):
         """This method is called at client side"""
-        self.proxy = jsonrpc.client.ServerProxy(url)
-        self.token = self.proxy.connect_via_queue(url, identifier, self.ttl)
+        self.proxy = jsonrpc.client.ServerProxy("http://%s:%d" % url)
+        self.token = self.proxy.connect_via_queue(identifier, self.ttl)
+        self.url = url
         return self.token
 
     def send_get(self, block, timeout):
@@ -110,7 +130,9 @@ class QueueClientConnection(Connection):
 class ExportedFunctions(object):
     """Exported JSON-RPC Server"""
     def connect_interactively(self, url, ttl):
-        return ConnectionPoint.append(InteractiveConnection(url, ttl))
+        connection = InteractiveConnection(ttl, client=False)
+        connection.connect(url)
+        return ConnectionPoint.append(connection)
 
     def connect_oneway(self, ttl=1000):
         return ConnectionPoint.append(Connection(ttl))
@@ -142,11 +164,10 @@ class ConnectionPoint(object):
     _server = None
     _connections = {}
     _url_to_token = {}
-    _client_token = None
 
     @classmethod
     def init(cls, host, port):
-        if self._server:
+        if cls._server:
             raise RuntimeError("server is already initialized")
         cls._server = jsonrpc.server.SimpleJSONRPCServer((host, port))
         cls._server.register_instance(ExportedFunctions())
@@ -162,7 +183,7 @@ class ConnectionPoint(object):
         berrymq.RootTransporter._connections = None
 
     @classmethod
-    def append(cls, connection, client=False):
+    def append(cls, connection):
         """Regist connection information.
 
         This method is work at both side of client and server.
@@ -175,10 +196,6 @@ class ConnectionPoint(object):
         @return: token
         @rtype:  str
         """
-        if client:
-            if cls._client_token:
-                raise UnInitializedServer()
-            cls._client_token = connection.token
         cls._connections[connection.token] = connection
         if connection.url:
             cls._url_to_token[connection.url] = connection.token
@@ -198,33 +215,37 @@ class ConnectionPoint(object):
 
     @classmethod
     def close(cls):
-        cls._server.shutdown()
+        if cls._server is not None:
+            cls._server.shutdown()
         cls._server = None
         cls._connections = {}
         cls._url_to_token = {}
         cls.clear_exchanger()
 
     @classmethod
+    def send_message(cls, identifier, args, kwargs):
+        for connection in cls._connections.values():
+            connection.send_message(identifier, args, kwargs)
+
+    @classmethod
     def forward_message(cls, identifier, args, kwargs, except_token=None):
         """Forward message to style01 connection clients/server
         @todo: ttl check
         """
+        print "forward_message:", identifier
         for token, connection in cls._connections.items():
-            if not isinstance(connection, InteractiveConnection):
-                continue
             if token == except_token:
                 continue
             connection.forward_message(identifier, args, kwargs)
 
     @classmethod
     def send_get(cls, block, timeout):
-        if not self._client_token:
-            raise NotConnectToServer()
-
-    @classmethod
-    def send_get_nowait(cls):
-        if not self._client_token:
-            raise NotConnectToServer()
+        for connection in cls._connections.values():
+            if isinstance(connection, QueueClientConnection):
+                idstr, args, kwargs = connection.send_get(block, timeout)
+                return berrymq.Message(berrymq.Identifier(idstr), 
+                                       args, kwargs, 100)
+        raise NotConnectToServer()
 
     @classmethod
     def receive_get(cls, token, block, timeout):
@@ -241,6 +262,7 @@ class ConnectionPoint(object):
 
     @classmethod
     def receive_message(cls, token, identifier, args, kwargs):
+        print "receive_message", identifier
         connection = cls._connections.get(token)
         if connection is None:
             return "invalid token"
@@ -260,38 +282,37 @@ class ConnectionPoint(object):
 
 
 def init_connection(host=("localhost", 0)):
-    ConnectionPoint.init(host, port)
+    ConnectionPoint.init(*host)
 
 
 def connect_interactively(url, ttl=1000):
-    connection = InteractiveConnection(url, ttl)
-    connection.connect()
-    ConnectionPoint.append(connection, client=True)
+    connection = InteractiveConnection(ttl, client=True)
+    connection.connect(url)
+    ConnectionPoint.append(connection)
 
 
 def connect_oneway(url, ttl=1000):
-    connection = Connection(url, ttl)
-    token = connection.connect()
-    ConnectionPoint.append(connection, client=True)
+    connection = Connection(ttl, client=True)
+    connection.connect(url)
+    ConnectionPoint.append(connection)
 
 
-def connect_via_queue(url, identfier, ttl=1000):
-    connection = QueueConnection(url, identifier, ttl)
-    token = connection.connect()
-    ConnectionPoint.append(connection, client=True)
+def connect_via_queue(url, identifier, ttl=1000):
+    connection = QueueClientConnection(ttl)
+    token = connection.connect(url, identifier)
+    ConnectionPoint.append(connection)
 
 
 def send_message(identifier, *args, **kwargs):
-    print "-"*40, message.id
     ConnectionPoint.send_message(identifier, args, kwargs)
 
 
-def get(block=True, timeout=0):
-    ConnectionPoint.send_get(block, timeout)
+def get(block=True, timeout=1000):
+    return ConnectionPoint.send_get(block, timeout)
 
 
 def get_nowait():
-    ConnectionPoint.send_get_nowait()
+    return ConnectionPoint.send_get(block=False, timeout=0)
 
 
 def close_connection(url=None):

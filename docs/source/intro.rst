@@ -59,6 +59,7 @@ Any object can use as message receiver. In python, this mechanism is realized by
 This is sample for Ruby.
 
 .. code-block:: ruby
+
    # Ruby
    class Logger
      include BerryMQ::Follower

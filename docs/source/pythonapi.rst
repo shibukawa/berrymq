@@ -119,15 +119,26 @@ They are used in type03 inter-process communication context.
 Inter-process settings
 ----------------------
 
-.. function:: init_connection([host="localhost"[, port=0]])
+.. function:: init_connection(host=("localhost", port=0))
+
+   If you want to use style01 inter-process communication feature, 
+   call this function first.
 
 .. function:: connect_interactively(url[, ttl=1000])
 
+   Connect to other node in style01.
+
 .. function:: connect_oneway(url[, ttl=1000])
+
+   Connect to other node in style02.
 
 .. function:: connect_via_queue(url, identfier[, ttl=1000])
 
+   Connect to other node in style03.
+
 .. function:: close_connection([url])
+
+   Close connection.
 
 Concurrency
 -----------

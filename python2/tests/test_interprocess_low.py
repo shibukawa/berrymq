@@ -99,7 +99,7 @@ class Style01Test(PrimaryNodeTester):
 
         berrymq.connect.ConnectionPoint.regist_exchanger()
         berrymq.regist_method("*:*", self.message_receiver)
-
+        print PRIMARY_NODE_URL
         self.token = self.client().connect_interactively(
             _url(PRIMARY_NODE_URL), 1000)
         berrymq.connect.ConnectionPoint._allow_token(self.token)
@@ -219,8 +219,8 @@ def secondary_node():
     berrymq.twitter("style01s:test02")
     time.sleep(1)
     berrymq.connect.ConnectionPoint.clear_exchanger()
-
     controller.style01.exit()
+
     controller.quit()
     secondary_node_server.shutdown()
 
