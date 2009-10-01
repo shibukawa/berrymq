@@ -100,8 +100,7 @@ class Style01Test(PrimaryNodeTester):
         berrymq.connect.ConnectionPoint.regist_exchanger()
         berrymq.regist_method("*:*", self.message_receiver)
         print PRIMARY_NODE_URL
-        self.token = self.client().connect_interactively(
-            _url(PRIMARY_NODE_URL), 1000)
+        self.token = self.client().connect_interactively(list(PRIMARY_NODE_URL), 1000)
         berrymq.connect.ConnectionPoint._allow_token(self.token)
         print "  token =", self.token
 

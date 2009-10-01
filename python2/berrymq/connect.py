@@ -36,13 +36,13 @@ class Connection(object):
         self.token = str(uuid.uuid1())
         self.ttl = ttl
         self.proxy = None
-        self.url = None
+        self.addr = None
         self.client = client
 
-    def connect(self, url):
+    def connect(self, addr):
         """This method is called at client side."""
-        self.url = url
-        self.proxy = jsonrpc.client.ServerProxy("http://%s:%d" % url)
+        self.addr = addr
+        self.proxy = jsonrpc.client.ServerProxy("http://%s:%d" % addr)
         self.token = self.proxy.connect_oneway(self.ttl)
         return self.token
 
@@ -69,19 +69,16 @@ class InteractiveConnection(Connection):
     """
     def __init__(self, ttl, client=False):
         super(InteractiveConnection, self).__init__(ttl, client)
-        self.proxy = None
-        self.url = None
 
-    def connect(self, url):
+    def connect(self, addr):
         """This method is called at client side."""
-        urlstr = "http://%s:%d" % url
-        self.proxy = jsonrpc.client.ServerProxy(urlstr)
-        self.token = self.proxy.connect_interactively(urlstr, self.ttl)
-        self.url = url
+        url = "http://%s:%d" % addr
+        self.proxy = jsonrpc.client.ServerProxy(url)
+        self.token = self.proxy.connect_interactively(addr, self.ttl)
+        self.addr = addr
         return self.token
 
     def forward_message(self, identifier, args, kwargs):
-        print "InteractiveConnection:", identifier
         self.check_ttl()
         if self.proxy is not None:
             self.proxy.send_message(self.token, identifier, args, kwargs)
@@ -113,11 +110,12 @@ class QueueClientConnection(Connection):
     def __init__(self, ttl):
         super(QueueClientConnection, self).__init__(ttl, client=True)
 
-    def connect(self, url, identifier):
+    def connect(self, addr, identifier):
         """This method is called at client side"""
-        self.proxy = jsonrpc.client.ServerProxy("http://%s:%d" % url)
+        url = "http://%s:%d" % addr
+        self.proxy = jsonrpc.client.ServerProxy(url)
         self.token = self.proxy.connect_via_queue(identifier, self.ttl)
-        self.url = url
+        self.addr = addr
         return self.token
 
     def send_get(self, block, timeout):
@@ -129,9 +127,10 @@ class QueueClientConnection(Connection):
 
 class ExportedFunctions(object):
     """Exported JSON-RPC Server"""
-    def connect_interactively(self, url, ttl):
+    def connect_interactively(self, addr, ttl):
+        print "connect_interactively"
         connection = InteractiveConnection(ttl, client=False)
-        connection.connect(url)
+        connection.connect(tuple(addr))
         return ConnectionPoint.append(connection)
 
     def connect_oneway(self, ttl=1000):
@@ -140,7 +139,10 @@ class ExportedFunctions(object):
     def connect_via_queue(self, identifier, ttl):
         return ConnectionPoint.append(QueueConnection(identifier, ttl))
 
-    def close_connection(self, token, url=None):
+    def close_connection(self, token, addr=None):
+        """
+        :todo: implement
+        """
         return "ok"
 
     def send_message(self, token, identifier, args, kwargs):
@@ -197,8 +199,8 @@ class ConnectionPoint(object):
         @rtype:  str
         """
         cls._connections[connection.token] = connection
-        if connection.url:
-            cls._url_to_token[connection.url] = connection.token
+        if connection.addr:
+            cls._url_to_token[connection.addr] = connection.token
         return connection.token
 
     @classmethod
@@ -207,10 +209,10 @@ class ConnectionPoint(object):
         cls._connections[token] = "test"
 
     @classmethod
-    def remove_connection(cls, url):
-        token = cls._url_to_token.get(url)
+    def remove_connection(addr, url):
+        token = cls._url_to_token.get(addr)
         if token:
-            del cls._url_to_token[url]
+            del cls._url_to_token[addr]
             del cls._connections[token]
 
     @classmethod
@@ -281,25 +283,25 @@ class ConnectionPoint(object):
 # berryMQ API
 
 
-def init_connection(host=("localhost", 0)):
-    ConnectionPoint.init(*host)
+def init_connection(addr=("localhost", 0)):
+    ConnectionPoint.init(*addr)
 
 
-def connect_interactively(url, ttl=1000):
+def connect_interactively(addr, ttl=1000):
     connection = InteractiveConnection(ttl, client=True)
-    connection.connect(url)
+    connection.connect(addr)
     ConnectionPoint.append(connection)
 
 
-def connect_oneway(url, ttl=1000):
+def connect_oneway(addr, ttl=1000):
     connection = Connection(ttl, client=True)
-    connection.connect(url)
+    connection.connect(addr)
     ConnectionPoint.append(connection)
 
 
-def connect_via_queue(url, identifier, ttl=1000):
+def connect_via_queue(addr, identifier, ttl=1000):
     connection = QueueClientConnection(ttl)
-    token = connection.connect(url, identifier)
+    token = connection.connect(addr, identifier)
     ConnectionPoint.append(connection)
 
 
@@ -320,6 +322,3 @@ def close_connection(url=None):
         ConnectionPoint.remove_connection(url)
     else:
         ConnectionPoint.close()
-
-
-
