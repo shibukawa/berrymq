@@ -7,7 +7,7 @@ setup(name = 'berrymq',
       version = __version__,
       author = 'SHIBUKAWA Yoshiki',
       author_email = 'yoshiki at shibu.jp',
-      url = 'http://bitbucket.org/shibu/berrymq/',
+      url = 'http://berrymq.org',
       description = 'Small message queue system for building applications',
       long_description = ('Programmer friendly message queue module. '
                         'It supports push/pull API, thread pool'),

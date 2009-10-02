@@ -8,10 +8,10 @@ Current version has following features:
 * **Push API:** event driven style API like twitter:-)
 * **Pull API:** simple queue object
 * **Multi language support:** Python(2.4 - 3.1) and Ruby(1.8.7, 1.9.1)
+* **Inter-process communication:** communicate via JSON-RPC(new! 0.2)
 
 Now following features are under construction:
 
-* **Inter-process communication:** communicate via JSON-RPC
 * **Call back API:** easy to use method-chain
 * **More language support:** I'd like to support JavaScript and so on
 
