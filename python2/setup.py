@@ -6,7 +6,7 @@ __version__ = open("../VERSION").read().strip()
 requires = []
 if sys.version_info[1] < 6:
     requires.append("simplejson")
-if sys.version_info[1] < 5
+if sys.version_info[1] < 5:
     requires.append("uuid")
 
 setup(name = 'berrymq',
