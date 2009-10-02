@@ -91,7 +91,10 @@ class SimpleJSONRPCServer(socketserver.TCPServer,
         else:
             socketserver.TCPServer.serve_forever(self, poll_interval)
 
-    def shutdown(self):
+    def shutdown(self, immediately = True):
+        if not immediately:
+            self._BaseServer__serving = False
+            return
         socketserver.TCPServer.shutdown(self)
         if self.__thread:
             self.__thread.join()

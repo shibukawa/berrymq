@@ -10,7 +10,6 @@ import threading
 import xmlrpc.client
 import itertools
 import functools
-from . import berrymq_network as network
 
 
 def _dummy(message):
@@ -189,8 +188,6 @@ class Transporter:
 
     def twitter(self, id_obj, args, kwargs, counter=100):
         self.twitter_local(id_obj, args, kwargs, counter)
-        #if p2p._receiver:
-        #    p2p._receiver._twitter_to_other_process(id_obj, args, kwargs)
 
     def twitter_local(self, id_obj, args, kwargs, counter=100):
         message = Message(id_obj, args, kwargs, counter)
@@ -214,9 +211,17 @@ class Transporter:
 class RootTransporter:
     _default_namespace = None
     _namespaces = {}
+    _connections = None
 
     @classmethod
     def twitter(cls, id_obj, args, kwargs):
+        cls.twitter_local(id_obj, args, kwargs)
+        id_str = id_obj.id_str()
+        if cls._connections:
+            cls._connections.forward_message(id_str, args, kwargs)
+
+    @classmethod
+    def twitter_local(cls, id_obj, args, kwargs):
         namespace = id_obj.namespace
         if namespace is None:
             namespace = cls._default_namespace
@@ -228,10 +233,6 @@ class RootTransporter:
         if namespace is None:
             namespace = cls._default_namespace
         cls.get(namespace).regist_follower(id_obj, method)
-
-    @classmethod
-    def show_followers(cls):
-        pass
 
     @classmethod
     def get(cls, namespace):
@@ -400,6 +401,27 @@ def auto_twitter(identifier, entry=False, exit=False):
     return _
 
 
+def twitter_exception(identifier, reraise=False, with_traceback=True):
+   id_obj = Identifier(identifier)
+   def _(func):
+       @functools.wraps(func)
+       def __(*args, **kwargs):
+           try:
+               func(*args, **kwargs)
+           except:
+               t, v, tb = sys.exc_info()
+               if with_traceback:
+                   message = traceback.format_exception(t, v, tb)
+               else:
+                   message = traceback.format_exception_only(t, v)
+               _mqas.twitter(id_obj, [message],
+                             {"type":t, "value":v, "traceback":tb})
+               if reraise:
+                   raise
+       return __
+   return _
+
+
 class Follower(type):
     """Metaclass for definition of follower instance methods.
 
@@ -444,6 +466,16 @@ class Follower(type):
             for id_obj in attribute.followers:
                 RootTransporter.regist_follower(id_obj, _weakmethod_ref(method))
         return instance
+
+
+def regist_method(identifier, method):
+    id_obj = Identifier(identifier)
+    RootTransporter.regist_follower(id_obj, _weakmethod_ref(method))
+
+
+def regist_function(identifier, function):
+    id_obj = Identifier(identifier)
+    RootTransporter.regist_follower(id_obj, _weakfunction_ref(function))
 
 
 class Message:

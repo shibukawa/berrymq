@@ -10,11 +10,7 @@ __copyright__ = "(C) 2004 Rui Carmo. Code under BSD License."
 __contributors__ = "Ingmar J Stein (Growl Team)"
 
 import struct
-try:
-    from hashlib import md5
-except ImportError:
-    from md5 import new as md5
-
+from hashlib import md5
 from socket import AF_INET, SOCK_DGRAM, socket
 
 GROWL_UDP_PORT=9887
@@ -113,31 +109,31 @@ class GrowlNotificationPacket:
 
 
 if __name__ == '__main__':
-    print "Starting Unit Test"
-    print " - please make sure Growl is listening for network notifications"
+    print("Starting Unit Test")
+    print(" - please make sure Growl is listening for network notifications")
     addr = ("localhost", GROWL_UDP_PORT)
     s = socket(AF_INET,SOCK_DGRAM)
-    print "Assembling registration packet like growlnotify's (no password)"
+    print("Assembling registration packet like growlnotify's (no password)")
     p = GrowlRegistrationPacket()
     p.addNotification()
-    print "Sending registration packet"
+    print("Sending registration packet")
     s.sendto(p.payload(), addr)
     import time
     time.sleep(3)
 
-    print "Assembling standard notification packet"
+    print("Assembling standard notification packet")
     p = GrowlNotificationPacket()
-    print "Sending standard notification packet"
+    print("Sending standard notification packet")
     s.sendto(p.payload(), addr)
 
-    print "Assembling priority -2 (Very Low) notification packet"
+    print("Assembling priority -2 (Very Low) notification packet")
     p = GrowlNotificationPacket(priority=-2)
-    print "Sending priority -2 notification packet"
+    print("Sending priority -2 notification packet")
     s.sendto(p.payload(), addr)
 
-    print "Assembling priority 2 (Very High) sticky notification packet"
+    print("Assembling priority 2 (Very High) sticky notification packet")
     p = GrowlNotificationPacket(priority=2,sticky=True)
-    print "Sending priority 2 (Very High) sticky notification packet"
+    print("Sending priority 2 (Very High) sticky notification packet")
     s.sendto(p.payload(), addr)
     s.close()
-    print "Done."
+    print("Done.")

@@ -3,6 +3,7 @@
 from berrymq import (following,
                      following_function,
                      auto_twitter,
+                     twitter_exception,
                      cond,
                      Follower,
                      set_multiplicity,

@@ -206,8 +206,6 @@ class Transporter(object):
 
     def twitter(self, id_obj, args, kwargs, counter=100):
         self.twitter_local(id_obj, args, kwargs, counter)
-        #if p2p._receiver:
-        #    p2p._receiver._twitter_to_other_process(id_obj, args, kwargs)
 
     def twitter_local(self, id_obj, args, kwargs, counter=100):
         message = Message(id_obj, args, kwargs, counter)
@@ -253,10 +251,6 @@ class RootTransporter(object):
         if namespace is None:
             namespace = cls._default_namespace
         cls.get(namespace).regist_follower(id_obj, method)
-
-    @classmethod
-    def show_followers(cls):
-        pass
 
     @classmethod
     def get(cls, namespace):

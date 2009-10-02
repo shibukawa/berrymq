@@ -3,13 +3,18 @@
 from .berrymq import (following,
                       following_function,
                       auto_twitter,
+                      twitter_exception,
                       cond,
                       Follower,
                       set_multiplicity,
-                      show_network,
-                      twitter)
+                      twitter,
+                      regist_method,
+                      regist_function,)
 
-#from .berrymq_network import (p2p_init,
-#                              p2p_connect,
-#                              p2p_quit,
-#                              p2p_mainloop)
+from .connect import (init_connection,
+                      interconnect,
+                      connect_oneway,
+                      connect_via_queue,
+                      close_connection,
+                      send_message,
+                      get, get_nowait)
