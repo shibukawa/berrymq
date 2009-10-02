@@ -119,26 +119,56 @@ They are used in type03 inter-process communication context.
 Inter-process settings
 ----------------------
 
-.. function:: init_connection(host=("localhost", port=0))
+.. function:: init_connection(addr=("localhost", port=0))
 
    If you want to use style01 inter-process communication feature, 
    call this function first.
 
-.. function:: connect_interactively(url[, ttl=1000])
+.. function:: interconnect(addr[, ttl=1000])
 
    Connect to other node in style01.
+   
+   :param addr: tuple which contains hostname and port number
+   :type  addr: tuple
 
-.. function:: connect_oneway(url[, ttl=1000])
+.. function:: connect_oneway(addr[, ttl=1000])
 
    Connect to other node in style02.
 
-.. function:: connect_via_queue(url, identfier[, ttl=1000])
+   :param addr: tuple which contains hostname and port number
+   :type  addr: tuple
 
-   Connect to other node in style03.
+.. function:: connect_via_queue(addr, identfier[, ttl=1000])
 
-.. function:: close_connection([url])
+   Connect to other node in style03. 
+   :ref:`identifier` is a filter of queue input.
+
+   :param addr: tuple which contains hostname and port number
+   :type  addr: tuple
+   :param identifier: filter of queue
+   :type  identifier: str
+
+.. function:: send_message(identifier[, ...])
+
+   Send message to other nodes. If you use :func:`interconnect` to connect,
+   you don't have to this method(forward twitter automatically).
+
+.. function:: get([block=True[, timeout=1000]])
+
+   :return: message
+   :rtype:  :class:`Message`
+
+.. function:: get_nowait()
+
+   :return: message
+   :rtype:  :class:`Message`
+
+.. function:: close_connection([addr])
 
    Close connection.
+
+   :param addr: tuple which contains hostname and port number
+   :type  addr: tuple
 
 Concurrency
 -----------

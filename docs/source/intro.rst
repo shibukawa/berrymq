@@ -141,11 +141,9 @@ There are two methods to get message. :meth:`berryMQ.Queue.get` and :meth:`berry
 Inter-Process Communication
 ===========================
 
-.. warning::
+.. versionadded:: 0.2
 
-   This is planning feature.
-
-berryMQ planning inter-process communication. berryMQ sends message via JSON-RPC. So any language which can speak JSON-RPC will be able to connect.
+berryMQ supports inter-process communication. berryMQ sends message via JSON-RPC. So any language which can speak JSON-RPC will be able to connect.
 
 .. _inter_process_style01:
 

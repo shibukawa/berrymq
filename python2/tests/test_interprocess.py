@@ -74,8 +74,6 @@ def quit():
 # 
 # These functions is run at primary node and called from secondary one via RPC.
 
-token = None
-
 
 class Style01Test(object):
     def __init__(self):
@@ -85,17 +83,19 @@ class Style01Test(object):
         self.received_messages.append(message.id)
 
     def start(self):
+        berrymq.regist_method("*", self.message_receiver)
         berrymq.init_connection(PRIMARY_NODE_URL)
-        berrymq.connect_interactively(PRIMARY_NODE_URL)
+        berrymq.interconnect(SECONDARY_NODE_URL)
         berrymq.twitter("style01c:test01")
         time.sleep(1)
         return True
 
     def exit(self):
-        expected = ["style01s:test02"]
+        expected = ['style01c:test01', u'style01s:test02']
         check(expected, self.received_messages)
         berrymq.close_connection()
         return True
+
 
 class Style02Test(object):
     def start(self):
@@ -144,6 +144,7 @@ def primary_node():
     def receive_messages(message):
         _primary_node_test_result.append(message)
     
+    berrymq.twitter("start primary server:info")
     jsonserver.serve_forever()
 
 
@@ -153,8 +154,8 @@ def secondary_node():
         ["style03c:test01", [3,2,1], {"a":1, "b":2}],
         ["style03s:test02", (), {}],
         ["style03s:test03", (), {}],
+        ["style01c:test01", [], {}],
         ["style01s:test02", (), {}],
-        ["style01c:test01", (), {}],
     ]
     test_results = []
     @berrymq.following_function("*:*")
@@ -225,4 +226,3 @@ if __name__ == "__main__":
         secondary_node()
     else:
         usage()
-

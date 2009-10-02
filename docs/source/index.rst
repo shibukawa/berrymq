@@ -25,7 +25,7 @@ Documentation
    pythonapi
    rubyapi
    messages
-   jsonapi
+   rpc_protocol
    features
    thanks
 

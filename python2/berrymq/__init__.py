@@ -12,7 +12,7 @@ from berrymq import (following,
 
 
 from connect import (init_connection,
-                     connect_interactively,
+                     interconnect,
                      connect_oneway,
                      connect_via_queue,
                      close_connection,

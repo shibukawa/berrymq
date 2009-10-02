@@ -33,11 +33,14 @@ class Connection(object):
     """
     def __init__(self, ttl=None, client=False):
         self.last_access = time.time()
-        self.token = str(uuid.uuid1())
+        self.token = None
         self.ttl = ttl
         self.proxy = None
         self.addr = None
         self.client = client
+        
+    def _generate_token(self):
+        return str(uuid.uuid1())
 
     def connect(self, addr):
         """This method is called at client side."""
@@ -62,24 +65,28 @@ class Connection(object):
         pass
 
 
-class InteractiveConnection(Connection):
+class Interconnection(Connection):
     """This class supports type01 connection.
     
     This object is used both client and server sides.
     """
     def __init__(self, ttl, client=False):
-        super(InteractiveConnection, self).__init__(ttl, client)
+        super(Interconnection, self).__init__(ttl, client)
 
-    def connect(self, addr):
+    def connect_at_client(self, addr):
         """This method is called at client side."""
-        url = "http://%s:%d" % addr
-        self.proxy = jsonrpc.client.ServerProxy(url)
-        self.token = self.proxy.connect_interactively(addr, self.ttl)
         self.addr = addr
-        return self.token
+        self.token = self._generate_token()
+        self.proxy = jsonrpc.client.ServerProxy("http://%s:%d" % addr)
+        my_addr = ConnectionPoint.get_addr()
+        self.proxy.interconnect(my_addr, self.token, self.ttl)
+
+    def connect_at_server(self, addr, token):
+        self.addr = addr
+        self.proxy = jsonrpc.client.ServerProxy("http://%s:%d" % addr)
+        self.token = token
 
     def forward_message(self, identifier, args, kwargs):
-        self.check_ttl()
         if self.proxy is not None:
             self.proxy.send_message(self.token, identifier, args, kwargs)
 
@@ -92,6 +99,7 @@ class QueueConnection(Connection):
     def __init__(self, identifier, ttl):
         super(QueueConnection, self).__init__(ttl, client=False)
         self.queue = berrymq.Queue(identifier)
+        self.token = self._generate_token()
 
     def receive_get_request(self, block, timeout):
         self.check_ttl()
@@ -127,10 +135,9 @@ class QueueClientConnection(Connection):
 
 class ExportedFunctions(object):
     """Exported JSON-RPC Server"""
-    def connect_interactively(self, addr, ttl):
-        print "connect_interactively"
-        connection = InteractiveConnection(ttl, client=False)
-        connection.connect(tuple(addr))
+    def interconnect(self, addr, his_token, ttl):
+        connection = Interconnection(ttl, client=False)
+        connection.connect_at_server(tuple(addr), his_token)
         return ConnectionPoint.append(connection)
 
     def connect_oneway(self, ttl=1000):
@@ -154,7 +161,7 @@ class ExportedFunctions(object):
     def get_nowait(self, token):
         return ConnectionPoint.receive_get(token, False, 0)
 
-    def _twitter_to_other_process(self, id_obj, args, kwargs):
+    def __twitter_to_other_process(self, id_obj, args, kwargs):
         for server in self.servers.itervalues():
             server.send_twitter(id_obj.id_str(), args, kwargs)
         return True
@@ -164,17 +171,25 @@ class ConnectionPoint(object):
     """This class manage network connection.
     """
     _server = None
+    _addr = None
     _connections = {}
     _url_to_token = {}
 
     @classmethod
-    def init(cls, host, port):
+    def init(cls, addr):
         if cls._server:
             raise RuntimeError("server is already initialized")
-        cls._server = jsonrpc.server.SimpleJSONRPCServer((host, port))
+        cls._server = jsonrpc.server.SimpleJSONRPCServer(addr)
         cls._server.register_instance(ExportedFunctions())
         cls._server.serve_forever(in_thread=True)
         cls.regist_exchanger()
+        cls._addr = addr
+        
+    @classmethod
+    def get_addr(cls):
+        if cls._addr is None:
+            raise RuntimeError("Please call init_connection() first.")
+        return cls._addr
 
     @classmethod
     def regist_exchanger(cls):
@@ -234,7 +249,6 @@ class ConnectionPoint(object):
         """Forward message to style01 connection clients/server
         @todo: ttl check
         """
-        print "forward_message:", identifier
         for token, connection in cls._connections.items():
             if token == except_token:
                 continue
@@ -264,7 +278,6 @@ class ConnectionPoint(object):
 
     @classmethod
     def receive_message(cls, token, identifier, args, kwargs):
-        print "receive_message", identifier
         connection = cls._connections.get(token)
         if connection is None:
             return "invalid token"
@@ -284,12 +297,12 @@ class ConnectionPoint(object):
 
 
 def init_connection(addr=("localhost", 0)):
-    ConnectionPoint.init(*addr)
+    ConnectionPoint.init(addr)
 
 
-def connect_interactively(addr, ttl=1000):
-    connection = InteractiveConnection(ttl, client=True)
-    connection.connect(addr)
+def interconnect(addr, ttl=1000):
+    connection = Interconnection(ttl, client=True)
+    connection.connect_at_client(addr)
     ConnectionPoint.append(connection)
 
 

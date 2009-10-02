@@ -5,6 +5,7 @@
 import os
 import sys
 import time
+import uuid
 import unittest
 
 rootdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -71,11 +72,13 @@ def quit():
     jsonserver.shutdown(immediately=False)
 
 
+def generate_token():
+    return str(uuid.uuid1())
+
+
 # Test Entry Points
 # 
 # These functions is run at primary node and called from secondary one via RPC.
-
-token = None
 
 
 class PrimaryNodeTester(object):
@@ -100,7 +103,8 @@ class Style01Test(PrimaryNodeTester):
         berrymq.connect.ConnectionPoint.regist_exchanger()
         berrymq.regist_method("*:*", self.message_receiver)
         print PRIMARY_NODE_URL
-        self.token = self.client().connect_interactively(list(PRIMARY_NODE_URL), 1000)
+        self.token = generate_token()
+        self.client().interconnect(PRIMARY_NODE_URL, self.token, 1000)
         berrymq.connect.ConnectionPoint._allow_token(self.token)
         print "  token =", self.token
 
@@ -111,11 +115,12 @@ class Style01Test(PrimaryNodeTester):
     def exit(self):
         expected = ["style01s:test02"]
         check(expected, self.received_messages)
-        print "  close_connection =", self.client().close_connection(self.token)
+        print "  close_connection =",self.client().close_connection(self.token)
         self.server.shutdown()
         self.connection = None
         berrymq.connect.ConnectionPoint.clear_exchanger()
         return True
+
 
 class Style02Test(PrimaryNodeTester):
     def start(self):
@@ -171,6 +176,7 @@ def primary_node():
     def receive_messages(message):
         _primary_node_test_result.append(message)
     
+    berrymq.twitter("start primary server:info")
     jsonserver.serve_forever()
 
 
@@ -256,4 +262,3 @@ if __name__ == "__main__":
         secondary_node()
     else:
         usage()
-
