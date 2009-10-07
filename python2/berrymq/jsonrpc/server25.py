@@ -40,6 +40,7 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
             server.serve_forever()
         if in_thread:
             self.__thread = threading.Thread(target=serve_thread, args=[self])
+            self.__thread.setDaemon(True)
             self.__thread.start()
         else:
             self.__serving = True

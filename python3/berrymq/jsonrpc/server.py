@@ -75,10 +75,8 @@ class SimpleJSONRPCServer(socketserver.TCPServer,
     def __init__(self, addr, requestHandler=SimpleJSONRPCRequestHandler,
                  logRequests=True):
         self.logRequests = logRequests
-
         SimpleJSONRPCDispatcher.__init__(self, allow_none=True, encoding=None)
         socketserver.TCPServer.__init__(self, addr, requestHandler)
-
         self.__thread = None  
 
     def serve_forever(self, in_thread=False, poll_interval=0.5):
@@ -87,6 +85,7 @@ class SimpleJSONRPCServer(socketserver.TCPServer,
         if in_thread:
             args = [self, poll_interval]
             self.__thread = threading.Thread(target=serve_thread, args=args)
+            self.__thread.setDaemon(True)
             self.__thread.start()
         else:
             socketserver.TCPServer.serve_forever(self, poll_interval)

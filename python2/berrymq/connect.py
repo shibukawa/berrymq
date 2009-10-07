@@ -1,5 +1,6 @@
 import time
 import uuid
+import socket
 import berrymq
 import jsonrpc.client
 import jsonrpc.server
@@ -38,6 +39,7 @@ class Connection(object):
         self.proxy = None
         self.addr = None
         self.client = client
+        self.error = False
         
     def _generate_token(self):
         return str(uuid.uuid1())
@@ -88,7 +90,10 @@ class Interconnection(Connection):
 
     def forward_message(self, identifier, args, kwargs):
         if self.proxy is not None:
-            self.proxy.send_message(self.token, identifier, args, kwargs)
+            try:
+                self.proxy.send_message(self.token, identifier, args, kwargs)
+            except socket.error:
+                self.error = True
 
     def send_message(self, identifier, args, kwargs):
         pass
@@ -249,10 +254,16 @@ class ConnectionPoint(object):
         """Forward message to style01 connection clients/server
         @todo: ttl check
         """
+        remove_list = []
         for token, connection in cls._connections.items():
             if token == except_token:
                 continue
             connection.forward_message(identifier, args, kwargs)
+            if connection.error:
+                remove_list.append(token)
+        for remove_token in remove_list:
+            print "remove_token:", remove_token
+            del cls._connections[remove_token]
 
     @classmethod
     def send_get(cls, block, timeout):
