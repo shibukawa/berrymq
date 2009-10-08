@@ -18,4 +18,5 @@ from connect import (init_connection,
                      connect_via_queue,
                      close_connection,
                      send_message,
-                     get, get_nowait)
+                     get, get_nowait,
+                     get_matched_followers)

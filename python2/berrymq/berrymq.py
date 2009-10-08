@@ -9,6 +9,7 @@ import Queue as queue
 import heapq
 import types
 import weakref
+import traceback
 import threading
 import xmlrpclib
 import itertools
@@ -224,6 +225,20 @@ class Transporter(object):
                 function()(message)
             else:
                 ThreadPool.request_work(function(), message)
+                
+    def get_matched_followers(self, id_obj):
+        followers = []
+        if id_obj.name is None:
+            actions = self._followers.values()
+        else:
+            wildcard_actions = self._followers.get(None, [])
+            certain_actions = self._followers.get(id_obj.name, [])
+            actions = [wildcard_actions, certain_actions]
+        for following_id, function in itertools.chain(*actions):
+            if not following_id.is_match(id_obj):
+                continue
+            followers.append(following_id)
+        return followers
 
 
 class RootTransporter(object):
@@ -246,11 +261,11 @@ class RootTransporter(object):
         cls.get(namespace).twitter(id_obj, args, kwargs)
 
     @classmethod
-    def regist_follower(cls, id_obj, method):
+    def regist_follower(cls, id_obj, callable):
         namespace = id_obj.namespace
         if namespace is None:
             namespace = cls._default_namespace
-        cls.get(namespace).regist_follower(id_obj, method)
+        cls.get(namespace).regist_follower(id_obj, callable)
 
     @classmethod
     def get(cls, namespace):
@@ -259,6 +274,13 @@ class RootTransporter(object):
             message_queue = Transporter()
             cls._namespaces[namespace] = message_queue
         return message_queue
+    
+    @classmethod
+    def get_matched_followers(cls, id_obj):
+        namespace = id_obj.namespace
+        if namespace is None:
+            namespace = cls._default_namespace
+        return cls.get(namespace).get_matched_followers(id_obj)
 
 
 class ThreadPool(object):

@@ -346,3 +346,9 @@ def close_connection(url=None):
         ConnectionPoint.remove_connection(url)
     else:
         ConnectionPoint.close()
+
+
+def get_matched_followers(identifier):
+    id_obj = berrymq.Identifier(identifier)
+    return berrymq.RootTransporter.get_matched_followers(id_obj)
+
