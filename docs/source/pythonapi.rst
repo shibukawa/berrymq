@@ -374,3 +374,69 @@ Growl Adapter
 
       This is template method fou formatting message.
       Override this method. This method should return string.
+
+
+.. module:: berrymq.adapter.fileobserver
+   :synopsis: berryMQ adapter for observing file system
+
+File Observer
+-------------
+
+.. class:: FileObserver
+
+   This is a adapter class for observing file system.
+   This adapter can notify following change:
+   
+   * **created**
+   * **modified**
+   * **removed**
+   
+   sample:
+
+   .. code-block:: python
+   
+      observer = berrymq.adapter.fileobserver.FileObserver("~/log/*.log", "local_log")
+   
+   If new log file is created, this object twitters ``local_log:created`` 
+   message automatically. Anyone modify log files, ``local_log:modified`` will 
+   be sent. Of course, ``local_log:removed`` message will be sent if 
+   any file is removed.
+   
+   .. method:: __init__(target_dir, id_name[, interval=5])
+   
+      :param target_dir: Checking condition (see glob's document).
+      :type  target_dir: str
+      :param id_name: This value is used for message id
+      :type  id_name: str
+      :param interval: File system checking inteval
+      :type  interval: int
+   
+   .. method:: stop()
+   
+      This method stop observing.
+
+.. module:: berrymq.adapter.timer
+   :synopsis: berryMQ adapter for timer
+
+Timer
+-----
+
+.. class:: IntervalTimer
+
+   This is a simple intarval timer. Following adapter sends
+   ``timer:tick`` message every 10 seconds.
+   
+   .. code-block:: python
+   
+      timer = berrymq.adapter.timer.IntervalTimer("timer", 10)
+   
+   .. method:: __init__(id_name, interval)
+   
+      :param id_name: This value is used for message id
+      :type  id_name: str
+      :param interval: This adapter send
+      :type  interval: int
+   
+   .. method:: stop()
+   
+      This method stop observing.

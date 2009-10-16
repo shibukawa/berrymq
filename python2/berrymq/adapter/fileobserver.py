@@ -12,10 +12,14 @@ class FileObserver(object):
         self.fileinfo = self._get_fileinfo()
         self.thread = threading.Thread(target=self._checkdir)
         self.thread.setDaemon(True)
+        self.running = True
         self.thread.start()
+        
+    def stop(self):
+        self.running = False
 
     def _checkdir(self):
-        while True:
+        while self.running:
             time.sleep(self.interval)
             new_info = self._get_fileinfo()
             old_info = self.fileinfo

@@ -193,6 +193,7 @@ class _weakfunction_ref(object):
 class Transporter(object):
     def __init__(self):
         self._followers = {}
+        self.lock = threading.RLock()
 
     def get_valid_followers(self):
         for name, followers in self._followers.items():
@@ -202,8 +203,10 @@ class Transporter(object):
                     yield id_obj, function
 
     def regist_follower(self, id_obj, function):
+        self.lock.acquire()
         followers = self._followers.setdefault(id_obj.name, [])
         followers.append((id_obj, function))
+        self.lock.release()
 
     def twitter(self, id_obj, args, kwargs, counter=100):
         self.twitter_local(id_obj, args, kwargs, counter)
@@ -228,6 +231,7 @@ class Transporter(object):
                 
     def get_matched_followers(self, id_obj):
         followers = []
+        self.lock.acquire()
         if id_obj.name is None:
             actions = self._followers.values()
         else:
@@ -238,6 +242,7 @@ class Transporter(object):
             if not following_id.is_match(id_obj):
                 continue
             followers.append(following_id)
+        self.lock.release()
         return followers
 
 
@@ -245,6 +250,7 @@ class RootTransporter(object):
     _default_namespace = None
     _namespaces = {}
     _connections = None
+    _lock = threading.RLock()
 
     @classmethod
     def twitter(cls, id_obj, args, kwargs):
@@ -269,10 +275,12 @@ class RootTransporter(object):
 
     @classmethod
     def get(cls, namespace):
+        cls._lock.acquire()
         message_queue = cls._namespaces.get(namespace)
         if message_queue is None:
             message_queue = Transporter()
             cls._namespaces[namespace] = message_queue
+        cls._lock.release()
         return message_queue
     
     @classmethod
