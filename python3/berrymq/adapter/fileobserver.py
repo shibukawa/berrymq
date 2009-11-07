@@ -1,8 +1,8 @@
+from .. import berrymq
 import os
 import glob
 import time
 import threading
-import berrymq
 
 class FileObserver(object):
     def __init__(self, target_dir, id_name, interval=5):

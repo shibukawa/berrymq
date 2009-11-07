@@ -27,6 +27,7 @@ Documentation
    messages
    rpc_protocol
    features
+   changes
    thanks
 
 * :ref:`search`

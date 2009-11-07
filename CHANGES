@@ -1,0 +1,22 @@
+Release 0.3 (2009/11/07)
+========================
+
+* Add FileObserver adapter on Python2 and Python3.
+
+* Add Intervaltimer adapter on Python2 and Python3.
+
+* Add wxPython adapter on Python2
+
+* Bugfix: #1 can't install via tarball
+
+Release 0.2 (2009/10/02)
+========================
+
+* Add Inter-process communication feature on Python2 and Python3.
+
+* Add Growl adapter on Python2 and Python3.
+
+Release 0.1 (2009/09/05)
+========================
+
+* Basic communication features on Python2, Python3, Ruby.

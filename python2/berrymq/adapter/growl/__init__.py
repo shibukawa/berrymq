@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import netgrowl
-from .. import berrymq
+import berrymq
 from socket import AF_INET, SOCK_DGRAM, socket
 
 class GrowlAdapter(object):

@@ -1,4 +1,4 @@
-import berrymq
+from .. import berrymq
 import os
 import time
 import threading

@@ -10,6 +10,8 @@ berrymq.egg-info/SOURCES.txt
 berrymq.egg-info/dependency_links.txt
 berrymq.egg-info/top_level.txt
 berrymq/adapter/__init__.py
+berrymq/adapter/fileobserver.py
+berrymq/adapter/timer.py
 berrymq/adapter/growl/__init__.py
 berrymq/adapter/growl/netgrowl.py
 berrymq/jsonrpc/__init__.py

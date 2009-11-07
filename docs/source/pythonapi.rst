@@ -124,6 +124,8 @@ Inter-process settings
    If you want to use style01 inter-process communication feature, 
    call this function first.
 
+   .. versionadded:: 0.2
+
 .. function:: interconnect(addr[, ttl=1000])
 
    Connect to other node in style01.
@@ -131,12 +133,16 @@ Inter-process settings
    :param addr: tuple which contains hostname and port number
    :type  addr: tuple
 
+   .. versionadded:: 0.2
+
 .. function:: connect_oneway(addr[, ttl=1000])
 
    Connect to other node in style02.
 
    :param addr: tuple which contains hostname and port number
    :type  addr: tuple
+
+   .. versionadded:: 0.2
 
 .. function:: connect_via_queue(addr, identfier[, ttl=1000])
 
@@ -148,20 +154,28 @@ Inter-process settings
    :param identifier: filter of queue
    :type  identifier: str
 
+   .. versionadded:: 0.2
+
 .. function:: send_message(identifier[, ...])
 
    Send message to other nodes. If you use :func:`interconnect` to connect,
    you don't have to this method(forward twitter automatically).
+
+   .. versionadded:: 0.2
 
 .. function:: get([block=True[, timeout=1000]])
 
    :return: message
    :rtype:  :class:`Message`
 
+   .. versionadded:: 0.2
+
 .. function:: get_nowait()
 
    :return: message
    :rtype:  :class:`Message`
+
+   .. versionadded:: 0.2
 
 .. function:: close_connection([addr])
 
@@ -169,6 +183,8 @@ Inter-process settings
 
    :param addr: tuple which contains hostname and port number
    :type  addr: tuple
+
+   .. versionadded:: 0.2
 
 Concurrency
 -----------
@@ -353,6 +369,8 @@ Adapters
 .. module:: berrymq.adapter.growl
    :synopsis: berryMQ adapter for Growl
 
+.. versionadded:: 0.2
+
 Growl Adapter
 -------------
 
@@ -378,6 +396,8 @@ Growl Adapter
 
 .. module:: berrymq.adapter.fileobserver
    :synopsis: berryMQ adapter for observing file system
+
+.. versionadded:: 0.3
 
 File Observer
 -------------
@@ -418,6 +438,8 @@ File Observer
 .. module:: berrymq.adapter.timer
    :synopsis: berryMQ adapter for timer
 
+.. versionadded:: 0.3
+
 Timer
 -----
 
@@ -440,3 +462,30 @@ Timer
    .. method:: stop()
    
       This method stop observing.
+
+.. module:: berrymq.adapter.wxpython
+   :synopsis: berryMQ adapter for wxPython
+
+.. versionadded:: 0.3
+
+wxPython
+--------
+
+.. class:: wxPythonAdapter
+
+   This class convert berryMQ message into wxPython's event.
+   
+   .. method:: __init__(window, id_filter)
+   
+      :param window: This is a wxPython's window that handles events.
+      :type  window: wx.Window
+      :param id_filter: The message will transfer to wxPython if matches it
+      :type  id_filter: str
+   
+.. class:: BerryMQEvent
+
+   This is event class of wxPython.
+
+.. function:: EVT_BERRYMQ_MSG
+
+   This is an event binder. See wxPython's document.

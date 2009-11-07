@@ -1,8 +1,8 @@
 Metadata-Version: 1.0
 Name: berrymq
-Version: 0.2
+Version: 0.3
 Summary: Small message queue system for building applications
-Home-page: http://bitbucket.org/shibu/berrymq/
+Home-page: http://berrymq.org
 Author: SHIBUKAWA Yoshiki
 Author-email: yoshiki at shibu.jp
 License: MIT License

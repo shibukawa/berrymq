@@ -1,6 +1,6 @@
 import wx
 import wx.lib.newevent
-from .. import berrymq
+import berrymq
 
 (BerryMQEvent, EVT_BERRYMQ_MSG) = wx.lib.newevent.NewEvent()
 

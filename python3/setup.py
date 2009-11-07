@@ -1,7 +1,7 @@
 import sys
 from setuptools import setup, find_packages 
 
-__version__ = open("../VERSION").read().strip()
+__version__ = open("VERSION").read().strip()
 
 setup(name = 'berrymq',
       version = __version__,

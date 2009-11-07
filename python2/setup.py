@@ -1,7 +1,7 @@
 import sys
 from setuptools import setup, find_packages 
 
-__version__ = open("../VERSION").read().strip()
+__version__ = open("VERSION").read().strip()
 
 requires = []
 if sys.version_info[1] < 6:

@@ -25,5 +25,6 @@ python3.0 setup.py bdist_egg upload
 
 echo "Python 3.1"
 python3.1 setup.py bdist_egg upload
+python3.1 setup.py sdist
 
 cd contrib/devtool
